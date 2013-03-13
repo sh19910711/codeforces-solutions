@@ -1,0 +1,12 @@
+4
+abacaba
+acaba
+abacaba
+acab
+6
+first
+first
+second
+second
+third
+third
