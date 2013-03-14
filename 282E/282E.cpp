@@ -44,63 +44,113 @@ namespace solution {
     typedef std::vector<II> VII;
 }
 
+// @snippet<sh19910711/contest:table/trie.cpp>
+namespace table {
+    // @desc トライ木の実装
+    template <class ValueType> class Trie {
+    public:
+        typedef std::string::const_iterator StringIterator;
+        static const int SIZE = 2;
+        ValueType value;
+        Trie *next[SIZE];
+        Trie() { clear(); }
+        void clear() {
+            std::fill( next, next+SIZE, (Trie*)NULL );
+        }
+        Trie& find( const long long& s ) {
+            Trie* res = this;
+            int len = s > 0 ? log2(s) + 1 : 0;
+            for ( int i = 40; i >= 0; -- i ) {
+                long long bi = 1LL << i;
+                int c = 0;
+                if ( i < len )
+                    c = ( ( s & bi ) > 0 ? 1 : 0 );
+                if ( ! res->next[c] ) res->next[c] = new Trie;
+                res = res->next[c];
+            }
+            return *res;
+        }
+        int count( const long long& s ) {
+            Trie* res = this;
+            int len = s > 0 ? log2(s) + 1 : 0;
+            for ( int i = 0; i < len; ++ i ) {
+                int bi = 1 << i;
+                int c = ( s & bi ) > 0 ? 1 : 0;
+                if ( ! res->next[c] ) return 0;
+                res = res->next[c];
+            }
+            return 1;
+        }
+        ValueType& operator []( const long long& s ) { return find(s).value; }
+    };
+}
+
+
 // @snippet<sh19910711/contest:solution/solution.cpp>
 namespace solution {
     using namespace std;
+    
+    typedef table::Trie<bool> Trie;
+
     const int SIZE = 100011;
     int n;
     LL A[SIZE];
-    int B[SIZE];
-
+    Trie T;
+    
     class Solution: public ISolution {
     public:
+        void init() {
+            T.clear();
+        }
+
         bool input() {
-            int k;
-            if ( ! ( cin >> k ) )
+            if ( ! ( cin >> n ) )
                 return false;
-            n = 0;
-            for ( int i = 0; i < k; ++ i ) {
-                int a;
-                cin >> a;
-                if ( ! a )
-                    continue;
-                A[n++] = a;
-            }
+            for ( int i = 0; i < n; ++ i )
+                cin >> A[i];
             return true;
         }
-        LL solve() {
-            if ( n == 0 )
-                return 0;
 
-            LL L[SIZE];
-            LL R[SIZE];
-            fill( L, L+SIZE, 0LL );
-            fill( R, R+SIZE, 0LL );
-            for ( int i = 0; i < n; ++ i ) {
-                L[i] ^= A[i];
-                R[i] ^= A[n-i-1];
-                if ( i - 1 >= 0 ) {
-                    L[i] ^= L[i-1];
-                    R[i] ^= R[i-1];
-                }
-            }
-
-            for ( int i = 0; i < n; ++ i )
-                B[i] = log2(A[i]) + 1;
-            int maxb = 0;
-            for ( int i = 0; i < n; ++ i ) {
-                maxb = max( maxb, B[i] );
-            }
-            // cout << "maxb: " << maxb << endl;
+        LL query( LL x ) {
             LL res = 0;
-            for ( int i = 0; i < n; ++ i ) {
-                if ( A[i] & maxb ) {
-                    // cout << i << ": " << A[i] << ", L = " << L[i] << ", R = " << R[n-i-1] << endl;
-                    res = max( res, max( L[i], R[n-i-1] ) );
+            Trie* cur = &T;
+            int len = x > 0 ? log2(x) + 1 : 1;
+            for ( int i = 40; i >= 0; -- i ) {
+                LL bi = 1LL << i;
+                int c = 0;
+                if ( i < len )
+                    c = ( ( x & bi ) > 0 ? 1 : 0 );
+                if ( cur->next[1-c] != NULL ) {
+                    cur = cur->next[1-c];
+                    res *= 2;
+                    res += 1;
+                } else {
+                    cur = cur->next[c];
+                    res *= 2;
                 }
             }
             return res;
         }
+
+        LL solve() {
+            LL whole = 0;
+            for ( int i = 0; i < n; ++ i )
+                whole ^= A[i];
+            LL suffix = 0;
+            for ( int i = 0; i < n; ++ i )
+                suffix ^= A[i];
+            LL prefix = 0;
+            LL res = suffix;
+            T[prefix] = true;
+            for ( int i = 0; i < n; ++ i ) {
+                prefix ^= A[i];
+                suffix ^= A[i]; // suffixとして利用する値
+                T[prefix] = true; // A[0...i]のxorが登録される
+                res = max( res, query(suffix) );
+            }
+            return res;
+        }
+
         int run() {
             while ( init(), input() ) {
                 cout << solve() << endl;
@@ -116,5 +166,6 @@ namespace solution {
 int main() {
     return solution::Solution().run();
 }
+
 
 
