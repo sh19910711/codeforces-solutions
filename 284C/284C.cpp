@@ -77,7 +77,8 @@ namespace solution {
     
     const int SIZE = 200011;
     int n;
-    LL bit[SIZE];
+    LL B[SIZE];
+    LL BS;
     LL S[SIZE];
     int SC;
     LL SS;
@@ -85,7 +86,7 @@ namespace solution {
     LL sum( int k ) {
         LL sum = 0;
         while ( k > 0 ) {
-            sum += bit[k] * k;
+            sum += B[k];
             k -= k & -k;
         }
         return sum;
@@ -93,7 +94,7 @@ namespace solution {
     
     void add( int k, int x ) {
         while ( k <= n ) {
-            bit[k] += x;
+            B[k] += x;
             k += k & -k;
         }
     }
@@ -103,7 +104,8 @@ namespace solution {
         void init() {
             SC = 1;
             SS = 0;
-            fill( bit, bit+SIZE, 10000 );
+            BS = 0;
+            fill( B, B+SIZE, 0 );
         }
         bool input() {
             return cin >> n;
@@ -111,34 +113,35 @@ namespace solution {
         double query() {
             int t;
             cin >> t;
-            if ( t == 1 ) { // 加算
+            if ( t == 1 ) {
                 int a, x;
                 cin >> a >> x;
                 add( a, x );
+                BS += x * a;
             } else if ( t == 2 ) { // 追加
                 int k;
                 cin >> k;
-                bit[SC] = 0;
+                B[SC] = 0;
                 S[SC++] = k;
                 SS += k;
             } else if ( t == 3 ) { // 削除
                 SS -= S[SC-1];
-                bit[SC-2] += bit[SC-1];
-                bit[SC-1] = 0;
+                LL tmp = B[SC-1];
+                BS -= tmp;
+                add( SC - 1, -tmp );
                 SC --;
             }
             
-            double a = SS + sum( SC - 1 );
-            double b = SC - 1;
-            return a / b;
+            LL a = SS + BS;
+            LL b = SC - 1;
+            return (double)a / b;
         }
         void solve() {
-            bit[SC] = 0;
+            B[SC] = 0;
             S[SC++] = 0;
             for ( int i = 0; i < n; ++ i ) {
                 printf("%.9f\n", query());
             }
-            cout << "--" << endl;
         }
         int run() {
             while ( init(), input() ) {
