@@ -110,7 +110,7 @@ namespace solution {
         bool input() {
             return cin >> n;
         }
-        double query() {
+        long double query() {
             int t;
             cin >> t;
             if ( t == 1 ) {
@@ -126,21 +126,23 @@ namespace solution {
                 SS += k;
             } else if ( t == 3 ) { // 削除
                 SS -= S[SC-1];
-                LL tmp = B[SC-1];
+                LL tmp = sum(SC-1) - sum(SC-2);
                 BS -= tmp;
                 add( SC - 1, -tmp );
+                B[SC-1] = 0;
                 SC --;
             }
             
             LL a = SS + BS;
             LL b = SC - 1;
-            return (double)a / b;
+            return (long double)a / (long double)b;
         }
         void solve() {
-            B[SC] = 0;
+            B[0] = 0;
+            B[1] = 0;
             S[SC++] = 0;
             for ( int i = 0; i < n; ++ i ) {
-                printf("%.9f\n", query());
+                cout << setprecision(9) << query() << endl;
             }
         }
         int run() {
