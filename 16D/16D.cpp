@@ -110,9 +110,19 @@ namespace solution {
             for ( int i = 0; i < n; ++ i )
                 D[i] = get_date(logs[i]);
             int cur = 0;
+            int cnt = 0;
             for ( int i = 0; i < n; ++ i ) {
                 if ( D[i] < cur ) {
                     res ++;
+                    cnt = 0;
+                } else if ( D[i] == cur ) {
+                    cnt ++;
+                    if ( cnt >= 10 ) {
+                        res ++;
+                        cnt = 0;
+                    }
+                } else {
+                    cnt = 0;
                 }
                 cur = D[i];
             }
