@@ -96,9 +96,9 @@ namespace solution {
             iss >> hh >> mm >> type;
             if ( type == "a" && hh == 12 ) {
                 return mm;
-            }
+            } 
             int res = hh * 60 + mm;
-            if ( type == "p" ) {
+            if ( type == "p" && hh != 12 ) {
                 res += 12 * 60;
             }
             return res;
