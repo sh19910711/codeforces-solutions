@@ -94,6 +94,9 @@ namespace solution {
             int hh, mm;
             string type;
             iss >> hh >> mm >> type;
+            if ( type == "a" && hh == 12 ) {
+                return mm;
+            }
             int res = hh * 60 + mm;
             if ( type == "p" ) {
                 res += 12 * 60;
