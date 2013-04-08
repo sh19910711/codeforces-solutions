@@ -52,16 +52,35 @@ namespace solution {
     const int SIZE = 1001;
     int n, m;
     int A[SIZE];
-    bool U[SIZE];
-    int dp[2][SIZE][2];
-    enum LIGHT_STATE { ON, OFF };
 
-    int get( int k ) {
-        return k & 1;
-    }
+    typedef queue <string> Queue;
 
-    int flip( int k ) {
-        return ( k ^ 1 ) & 1;
+    int bfs(string start) {
+        string goal(n, 'o');
+        int res = 0;
+        Queue Q;
+        Q.push(start);
+        while ( ! Q.empty() ) {
+            string s = Q.front();
+            Q.pop();
+            if ( s == goal ) {
+                res ++;
+            }
+            for ( int i = 0; i < n; ++ i ) {
+                if ( s[i] == 'x' ) {
+                    if ( i - 1 >= 0 && s[i-1] == 'o' ) {
+                        s[i] = 'o';
+                        Q.push(s);
+                        s[i] = 'x';
+                    } else if ( i + 1 < n && s[i+1] == 'o' ) {
+                        s[i] = 'o';
+                        Q.push(s);
+                        s[i] = 'x';
+                    }
+                }
+            }
+        }
+        return res;
     }
 
     class Solution: public ISolution {
@@ -74,77 +93,13 @@ namespace solution {
                 cin >> A[i];
             return true;
         }
-
-        void dp_init( int k ) {
-            for ( int i = 0; i < SIZE; ++ i ) {
-                for ( int j = 0; j < 2; ++ j ) {
-                    dp[k][i][j] = 0;
-                }
-            }
-        }
-
-        void dp_copy( int from ) {
-            int to = flip(from);
-            for ( int i = 0; i < SIZE; ++ i ) {
-                for ( int j = 0; j < 2; ++ j ) {
-                    dp[to][i][j] = dp[from][i][j];
-                }
-            }
-        }
-
-        void dp_print( int k ) {
-            cout << "ON:  ";
-            for ( int i = 0; i < n; ++ i )
-                cout << dp[k][i][ON] << ", ";
-            cout << endl;
-            cout << "OFF: ";
-            for ( int i = 0; i < n; ++ i )
-                cout << dp[k][i][OFF] << ", ";
-            cout << endl;
-            cout << endl;
-        }
         
         int solve() {
-            for ( int i = 0; i < 2; ++ i )
-                dp_init(i);
-
-            for ( int i = 0; i < n; ++ i ) {
-                dp[0][i][OFF] = 1;
-            }
-            for ( int i = 0; i < m; ++ i ) {
-                int a = A[i] - 1;
-                dp[0][a][OFF] = 0;
-                dp[0][a][ON] = 1;
-            }
-
-            for ( int i = 0; i < n - m; ++ i ) {
-                int cur = get(i);
-                int next = flip(cur);
-
-                cout << "cur: i = " << i << endl;
-                dp_print(cur);
-
-                dp_init(next);
-                for ( int j = 0; j < n; ++ j ) {
-                    dp[next][j][OFF] = dp[cur][j][OFF];
-                }
-                for ( int j = 0; j < n; ++ j ) {
-                    if ( j - 1 >= 0 )
-                        dp[next][j-1][ON] += dp[cur][j][ON];
-                    if ( j + 1 < n )
-                        dp[next][j+1][ON] += dp[cur][j][ON];
-                }
-                dp_copy(next);
-            }
-
-            int sum = 0;
-            for ( int i = 0; i < n; ++ i ) {
-                cout << dp[get(m)][i][ON] << ", ";
-                sum += dp[get(m)][i][ON];
-            }
-            cout << endl;
-            cout << "sum = " << sum << endl;
-            return -1;
+            string s(n,'x');
+            for ( int i = 0; i < m; ++ i )
+                s[A[i]-1] = 'o';
+            cout << "s = " << s << endl;
+            return bfs(s);
         }
 
         void output( int result ) {
