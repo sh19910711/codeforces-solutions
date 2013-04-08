@@ -44,6 +44,7 @@ namespace solution {
     typedef std::vector<II> VII;
 }
 
+// @snippet<sh19910711/contest:math/mod_pow.cpp>
 namespace math {
     template<class T> T mod_pow( T x, T n, T mod ) {
         if ( n == 0 ) return 1;
@@ -53,6 +54,7 @@ namespace math {
     }
 }
 
+// @snippet<sh19910711/contest:math/comb/comb.cpp>
 namespace math {
     namespace comb {
         const int MOD = 1000000000 + 7;
@@ -136,5 +138,6 @@ namespace solution {
 int main() {
     return solution::Solution().run();
 }
+
 
 
