@@ -44,45 +44,47 @@ namespace solution {
     typedef std::vector<II> VII;
 }
 
+namespace math {
+    template<class T> T mod_pow( T x, T n, T mod ) {
+        if ( n == 0 ) return 1;
+        T res = mod_pow( x * x % mod, n / 2, mod );
+        if ( n & 1 ) res = res * x % mod;
+        return res;
+    }
+}
+
+namespace math {
+    namespace comb {
+        const int MOD = 1000000000 + 7;
+        const int SIZE = 1001;
+        long long C[SIZE][SIZE];
+        void init() {
+            for ( int i = 0; i < SIZE; ++ i ) {
+                for ( int j = 0; j <= i; ++ j ) {
+                    if ( j == 0 || j == i )
+                        C[i][j] = 1;
+                    else
+                        C[i][j] = ( C[i-1][j-1] + C[i-1][j] ) % MOD;
+                }
+            }
+        }
+        long long calc( int n, int r ) {
+            return C[n][r];
+        }
+    }
+}
+
 // @snippet<sh19910711/contest:solution/solution.cpp>
 namespace solution {
     using namespace std;
+    using namespace math;
     
     const int MOD = 1000000000 + 7;
     const int SIZE = 1001;
     int n, m;
     int A[SIZE];
-
-    typedef queue <string> Queue;
-
-    int bfs(string start) {
-        string goal(n, 'o');
-        int res = 0;
-        Queue Q;
-        Q.push(start);
-        while ( ! Q.empty() ) {
-            string s = Q.front();
-            Q.pop();
-            if ( s == goal ) {
-                res ++;
-            }
-            for ( int i = 0; i < n; ++ i ) {
-                if ( s[i] == 'x' ) {
-                    if ( i - 1 >= 0 && s[i-1] == 'o' ) {
-                        s[i] = 'o';
-                        Q.push(s);
-                        s[i] = 'x';
-                    } else if ( i + 1 < n && s[i+1] == 'o' ) {
-                        s[i] = 'o';
-                        Q.push(s);
-                        s[i] = 'x';
-                    }
-                }
-            }
-        }
-        return res;
-    }
-
+    int D[SIZE];
+    
     class Solution: public ISolution {
     public:
         
@@ -95,18 +97,32 @@ namespace solution {
         }
         
         int solve() {
-            string s(n,'x');
-            for ( int i = 0; i < m; ++ i )
-                s[A[i]-1] = 'o';
-            cout << "s = " << s << endl;
-            return bfs(s);
+            sort(A, A+m);
+            int dc = 0;
+            D[dc++] = A[0] - 1;
+            D[dc++] = n - A[m-1];
+            for ( int i = 0; i + 1 < m; ++ i ) {
+                if ( A[i+1] - A[i] > 1 )
+                    D[dc++] = A[i+1] - A[i] - 1;
+            }
+            LL res = 1;
+            int remains = n - m;
+            for ( int i = 0; i < dc; ++ i ) {
+                res = ( res * comb::calc(remains, D[i]) ) % MOD;
+                remains -= D[i];
+            }
+            for ( int i = 2; i < dc; ++ i ) {
+                res = ( res * mod_pow(2LL, D[i] - 1LL, (LL)MOD) ) % MOD;
+            }
+            return res;
         }
-
+        
         void output( int result ) {
             cout << result << endl;
         }
         
         int run() {
+            comb::init();
             while ( init(), input() ) {
                 output(solve());
             }
@@ -120,4 +136,5 @@ namespace solution {
 int main() {
     return solution::Solution().run();
 }
+
 
