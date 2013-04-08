@@ -1,0 +1,13 @@
+7
+pwd
+cd /home/vasya
+pwd
+cd ..
+pwd
+cd vasya/../petya
+pwd
+4
+cd /a/b
+pwd
+cd ../a/b
+pwd
