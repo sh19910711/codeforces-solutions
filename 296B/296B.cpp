@@ -103,9 +103,11 @@ namespace solution {
                     }
                     sum = ( sum * cnt ) % MOD;
                 } else if ( s[i] == '?' ) {
-                    sum = ( sum * ( w[i] - '0' + 1 ) );
+                    sum = ( sum * ( w[i] - '0' + 1 ) ) % MOD;
                 } else if ( w[i] == '?' ) {
-                    sum = ( sum * ( 10 - ( s[i] - '0' ) ) );
+                    sum = ( sum * ( 10 - ( s[i] - '0' ) ) ) % MOD;
+                } else if ( s[i] > w[i] ) {
+                    return 0;
                 }
             }
             return sum % MOD;
@@ -124,9 +126,11 @@ namespace solution {
                     }
                     sum = ( sum * cnt ) % MOD;
                 } else if ( s[i] == '?' ) {
-                    sum = ( sum * ( 10 - ( w[i] - '0' ) ) );
+                    sum = ( sum * ( 10 - ( w[i] - '0' ) ) ) % MOD;
                 } else if ( w[i] == '?' ) {
-                    sum = ( sum * ( s[i] - '0' + 1 ) );
+                    sum = ( sum * ( s[i] - '0' + 1 ) ) % MOD;
+                } else if ( s[i] < w[i] ) {
+                    return 0;
                 }
             }
             return sum % MOD;
@@ -140,10 +144,12 @@ namespace solution {
                     sum = ( sum * 10 ) % MOD;
                 }
             }
-            return sum;
+            return sum % MOD;
         }
         
         int solve() {
+            if ( n == 1 )
+                return 0;
             if ( check_no_question() ) {
                 return check_valid() ? 1 : 0;
             }
@@ -153,7 +159,8 @@ namespace solution {
             LL bad3 = find_comb_3();
             LL res = ( total - bad1 + MOD ) % MOD;
             res = ( res - bad2 + MOD ) % MOD;
-            res = ( res + bad3 ) % MOD;
+            if ( bad1 > 0 && bad2 > 0 )
+                res = ( res + bad3 ) % MOD;
             return res % MOD;
         }
 
