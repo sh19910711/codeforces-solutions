@@ -54,6 +54,7 @@ namespace solution {
     int n;
     int A[SIZE];
     Set S;
+    bool rok[256];
     bool ok[256];
 
     int to_int( string& n ) {
@@ -69,40 +70,100 @@ namespace solution {
         return oss.str();
     }
 
-    bool check_reverse( string s ) {
-        cout << s << " => ";
-        reverse(s.begin(), s.end());
-        ISS iss(s);
-        int a, b;
-        iss >> a >> b;
-        cout << a << ", " << b << endl;
-        return a <= 255 && b <= 255;
+    bool check( string a1, string a2, string a3, string a4 ) {
+        int na1 = to_int(a1);
+        if ( na1 > 255 )
+            return false;
+        int na2 = to_int(a2);
+        if ( na2 > 255 )
+            return false;
+        int na3 = to_int(a3);
+        if ( na3 > 255 )
+            return false;
+        int na4 = to_int(a4);
+        if ( na4 > 255 )
+            return false;
+        string sa1 = to_string(na1);
+        string sa2 = to_string(na2);
+        string sa3 = to_string(na3);
+        string sa4 = to_string(na4);
+        if ( sa1.size() || sa2.size() || sa3.size() || sa4.size() )
+            continue;
+        string l = sa1 + sa2;
+        string r = sa3 + sa4;
+        cout << l << " / " << r << endl;
+        reverse(r.begin(), r.end());
+        cout << l << "." << r << endl;
+        if ( l != r )
+            return false;
+        string s = l + r;
+        int n = s.size();
+        for ( int i = 0; i < n; ++ i )
+            if ( ! rok[(int)s[i]] )
+                return false;
+        return true;
     }
 
-    void check( string a_, string b_ ) {
-        int na = to_int(a_);
-        int nb = to_int(b_);
-        if ( na > 255 || nb > 255 )
-            return;
-        string sa = to_string(na);
-        string sb = to_string(nb);
-        if ( sa.size() > 3 || sb.size() > 3 )
-            return;
-        if ( sa[sa.size()-1] == '0' ) {
-            if ( sa != "0" )
-                return;
+    void check( string s ) {
+        string rs = s;
+        reverse( rs.begin(), rs.end() );
+        int n = s.size(), m = rs.size();
+        for ( int i = 1; i < n; ++ i ) {
+            for ( int j = 1; j < m; ++ j ) {
+                string a1 = s.substr(0, i);
+                string a2 = s.substr(i);
+                string a3 = rs.substr(0, j);
+                string a4 = rs.substr(j);
+                if ( check( a1, a2, a3, a4 ) ) {
+                    string sa1 = to_string(to_int(a1));
+                    string sa2 = to_string(to_int(a2));
+                    string sa3 = to_string(to_int(a3));
+                    string sa4 = to_string(to_int(a4));
+                    S.insert(sa1+'.'+sa2+'.'+sa3+'.'+sa4);
+                }
+            }
         }
-        if ( sb[sb.size()-1] == '0' ) {
-            if ( sb != "0" )
-                return;
+        string rs2 = s;
+        reverse( rs2.begin(), rs2.end() );
+        rs2 = rs2.substr(1);
+        int n2 = s.size(), m2 = rs2.size();
+        for ( int i = 1; i < n2; ++ i ) {
+            for ( int j = 1; j < m2; ++ j ) {
+                string a1 = s.substr(0, i);
+                string a2 = s.substr(i);
+                string a3 = rs2.substr(0, j);
+                string a4 = rs2.substr(j);
+                if ( check( a1, a2, a3, a4 ) ) {
+                    string sa1 = to_string(to_int(a1));
+                    string sa2 = to_string(to_int(a2));
+                    string sa3 = to_string(to_int(a3));
+                    string sa4 = to_string(to_int(a4));
+                    S.insert(sa1+'.'+sa2+'.'+sa3+'.'+sa4);
+                }
+            }
         }
-
-        {
-            string s = sa + '.' + sb;
-            if ( check_reverse(sa + ' ' + sb) ) {
-                string rs = s;
-                reverse(rs.begin(), rs.end());
-                cout << s << "." << rs << endl;
+        string rs3 = s;
+        reverse( rs3.begin(), rs3.end() );
+        rs3 = "0" + rs3;
+        for ( char c = '0'; c <= '9'; ++ c ) {
+            if ( rok[(int)c] == false )
+                continue;
+            rs3[0] = c;
+            int n3 = s.size(), m3 = rs3.size();
+            for ( int i = 1; i < n3; ++ i ) {
+                for ( int j = 1; j < m3; ++ j ) {
+                    string a1 = s.substr(0, i);
+                    string a2 = s.substr(i);
+                    string a3 = rs3.substr(0, j);
+                    string a4 = rs3.substr(j);
+                    if ( check( a1, a2, a3, a4 ) ) {
+                        string sa1 = to_string(to_int(a1));
+                        string sa2 = to_string(to_int(a2));
+                        string sa3 = to_string(to_int(a3));
+                        string sa4 = to_string(to_int(a4));
+                        S.insert(sa1+'.'+sa2+'.'+sa3+'.'+sa4);
+                    }
+                }
             }
         }
     }
@@ -113,6 +174,7 @@ namespace solution {
         void init() {
             S.clear();
             fill( ok, ok+256, false );
+            fill( rok, rok+256, false );
         }
         
         bool input() {
@@ -124,8 +186,14 @@ namespace solution {
         }
         
         void solve() {
-            for ( int i = 0; i < n; ++ i )
+            for ( int i = 0; i < n; ++ i ) {
+                rok[A[i]+'0'] = true;
                 ok[A[i]+'0'] = true;
+            }
+            if ( ok['0'] == false ) {
+                ok['0'] = true;
+                n ++;
+            }
             for ( char c1 = '0'; c1 <= '9'; ++ c1 ) {
                 for ( char c2 = '0'; c2 <= '9'; ++ c2 ) {
                     for ( char c3 = '0'; c3 <= '9'; ++ c3 ) {
@@ -142,11 +210,7 @@ namespace solution {
                                         s += c6;
                                         set <char> ss(s.begin(), s.end());
                                         if ( (int)ss.size() == n ) {
-                                            for ( int i = 1; i <= 6; ++ i ) {
-                                                string a1 = s.substr(0, i);
-                                                string a2 = s.substr(i);
-                                                check(a1, a2);
-                                            }
+                                            check(s);
                                         }
                                     }
                                 }
@@ -154,6 +218,13 @@ namespace solution {
                         }
                     }
                 }
+            }
+        }
+
+        void output() {
+            cout << S.size() << endl;
+            for ( Set::iterator it_i = S.begin(); it_i != S.end(); ++ it_i ) {
+                cout << *it_i << endl;
             }
         }
         
