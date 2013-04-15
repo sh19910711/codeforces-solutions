@@ -49,6 +49,7 @@ namespace solution {
     using namespace std;
 
     const int SIZE = 100011;
+    const int NONE = -1;
     const string TYPE_BUS = "bus topology";
     const string TYPE_RING = "ring topology";
     const string TYPE_STAR = "star topology";
@@ -70,6 +71,58 @@ namespace solution {
         }
     }
 
+    bool is_bus() {
+        int cand1 = NONE, cand2 = NONE;
+        for ( int i = 0; i < n; ++ i ) {
+            if ( D[i] == 1 ) {
+                if ( cand1 == NONE ) {
+                    cand1 = i;
+                } else if ( cand2 == NONE ) {
+                    cand2 = i;
+                } else {
+                    return false;
+                }
+            }
+        }
+        if ( cand1 == NONE || cand2 == NONE )
+            return false;
+        for ( int i = 0; i < n; ++ i ) {
+            if ( cand1 == i || cand2 == i )
+                continue;
+            if ( D[i] != 2 )
+                return false;
+        }
+        return true;
+    }
+
+    bool is_ring() {
+        for ( int i = 0; i < n; ++ i ) {
+            if ( D[i] != 2 )
+                return false;
+        }
+        return true;
+    }
+
+    bool is_star() {
+        int cand1 = NONE;
+        for ( int i = 0; i < n; ++ i ) {
+            if ( D[i] == n - 1 ) {
+                if ( cand1 != NONE )
+                    return false;
+                cand1 = i;
+            }
+        }
+        if ( cand1 == NONE )
+            return false;
+        for ( int i = 0; i < n; ++ i ) {
+            if ( cand1 == i )
+                continue;
+            if ( D[i] != 1 )
+                return false;
+        }
+        return true;
+    }
+
     class Solution: public ISolution {
     public:
         void init() {
@@ -88,14 +141,36 @@ namespace solution {
             return true;
         }
         
-        void solve() {
+        string solve() {
             generate_graph();
+            bool f1 = is_bus();
+            bool f2 = is_ring();
+            bool f3 = is_star();
+            int cnt = 0;
+            if ( f1 )
+                cnt ++;
+            if ( f2 )
+                cnt ++;
+            if ( f3 )
+                cnt ++;
+            if ( cnt != 1 )
+                return TYPE_NONE;
+            if ( f1 )
+                return TYPE_BUS;
+            if ( f2 )
+                return TYPE_RING;
+            if ( f3 )
+                return TYPE_STAR;
+            return "hoge";
+        }
+
+        void output( string result ) {
+            cout << result << endl;
         }
         
         int run() {
             while ( init(), input() ) {
-                solve();
-                output();
+                output(solve());
             }
             return 0;
         }
