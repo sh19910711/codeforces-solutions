@@ -51,54 +51,37 @@ namespace solution {
     typedef map <int, int> Map;
 
     const int SIZE = 5001;
-    const int CANDS = SIZE * 200 + 11 + 200000;
+    const int CANDS = 1000011;
     const int INF = std::numeric_limits<int>::max();
 
     int n, k;
     int A[SIZE];
-    Map C[CANDS];
-    int O[CANDS];
-    int X[CANDS];
-    int XC;
 
     void get_cands() {
-        for ( int i = 0; i < n; ++ i ) {
-            for ( int j = -100; j <= 100; ++ j ) {
-                if ( A[i] + j > 0 )
-                    X[XC ++] = A[i] + j;
-            }
-        }
     }
 
     int solve() {
         if ( n == 1 )
             return 1;
         get_cands();
-        for ( int i = 0; i < XC; ++ i ) {
+        int res = INF;
+        for ( int i = 1; i < CANDS; ++ i ) {
+            int sum = 0;
+            Map C;
             for ( int j = 0; j < n; ++ j ) {
-                int& cnt = C[i][A[j] % X[i]];
+                int& cnt = C[A[j] % i];
                 cnt ++;
                 if ( cnt >= 2 )
-                    O[i] ++;
+                    sum ++;
             }
-        }
-        int res = INF;
-        for ( int i = 0; i < XC; ++ i ) {
-            if ( O[i] <= k )
-                res = min(res, X[i]);
+            if ( sum <= k )
+                return i;
         }
         return res;
     }
 
     class Solution: public ISolution {
     public:
-
-        void init() {
-            XC = 0;
-            for ( int i = 0; i < CANDS; ++ i )
-                C[i].clear();
-            fill(O, O + CANDS, 0);
-        }
         
         bool input() {
             if ( ! ( cin >> n >> k ) )
