@@ -54,36 +54,29 @@ namespace solution {
 
     bool check() {
         for ( int i = 0; i < n; ++ i )
-            if ( ( A[i] + B[i] ) % n != C[i] )
+            if ( ( A[i] + B[i] ) % n != C[i] % n )
                 return false;
         return true;
     }
 
     void solve() {
-        cout << "n = " << n << endl;
+        if ( n % 2 == 0 ) {
+            cout << -1 << endl;
+            return;
+        }
         for ( int i = 0; i < n; ++ i )
             A[i] = B[i] = C[i] = i;
-        do {
-            do {
-                do {
-                    if ( check() ) {
-                        for ( int i = 0; i < n; ++ i ) {
-                            cout << A[i] << ", ";
-                        }
-                        cout << endl;
-                        for ( int i = 0; i < n; ++ i ) {
-                            cout << B[i] << ", ";
-                        }
-                        cout << endl;
-                        for ( int i = 0; i < n; ++ i ) {
-                            cout << C[i] << ", ";
-                        }
-                        cout << endl;
-                        return;
-                    }
-                } while (next_permutation(C, C + n));
-            } while (next_permutation(B, B + n));
-        } while(next_permutation(A, A + n));
+        for ( int i = 0; i < n; ++ i )
+            C[i] = ( A[i] + B[i] ) % n;
+        for ( int i = 0; i < n; ++ i )
+            cout << A[i] << " ";
+        cout << endl;
+        for ( int i = 0; i < n; ++ i )
+            cout << B[i] << " ";
+        cout << endl;
+        for ( int i = 0; i < n; ++ i )
+            cout << C[i] << " ";
+        cout << endl;
     }
 
     class Solution: public ISolution {
