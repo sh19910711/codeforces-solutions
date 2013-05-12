@@ -78,7 +78,7 @@ namespace solution {
     }
     
     LD get_offset() {
-        LD scale = s + 1.0 / (LD)math::gcd(a, b);
+        LD scale = s + 0.5;
         LD da = a, db = b;
         LD sa = da * scale, sb = db * scale;
         if ( is_number(sa) && is_number(sb) && sa <= n && sb <= m )
@@ -95,6 +95,9 @@ namespace solution {
     }
     
     Result solve() {
+        LL g = math::gcd(a, b);
+        a /= g;
+        b /= g;
         for ( s = 1; s <= max(n, m); ++ s ) {
             LL ns = s + 1;
             if ( a * ns > n || b * ns > m )
