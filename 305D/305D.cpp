@@ -113,13 +113,13 @@ namespace solution {
         
         D[0][OFF] = 1;
         for ( int i = 0; i < n; ++ i ) {
-            D[i + 1][OFF] = D[i][OFF] + D[i][ON];
+            D[i + 1][OFF] = ( D[i][OFF] + D[i][ON] ) % MOD;
             if ( ! G[i].count(i + 1) )
-                D[i + 1][OFF] ++;
+                D[i + 1][OFF] = ( D[i + 1][OFF] + 1 ) % MOD;
             if ( i + k + 1 < n && ! G[i].count(i + k + 1) )
-                D[i + k + 1][ON] += D[i][OFF];
+                D[i + k + 1][ON] = ( D[i + k + 1][ON] + D[i][OFF] ) % MOD;
         }
-        return D[n - 1][OFF] - 1;
+        return ( D[n - 1][OFF] - 1 + MOD ) % MOD;
     }
 
     class Solution: public ISolution {
