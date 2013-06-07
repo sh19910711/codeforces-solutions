@@ -47,59 +47,40 @@ namespace solution {
 // @snippet<sh19910711/contest:solution/solution.cpp>
 namespace solution {
     using namespace std;
-
+    
+    const int SIZE = 100 + 11;
     const int NONE = -1;
 
     int b, d;
     string a, c;
 
-    string get_repeated( const string& s, int k ) {
-        VS v(k, s);
-        return accumulate(v.begin(), v.end(), string());
-    }
-
-    int find_subseq( const string& a, const string& b ) {
-        int na = a.size(), nb = b.size();
-        for ( int i = 0, j = 0; i < na && j < nb; ++ i ) {
-            if ( a[i] == b[j] ) {
-                j ++;
-                if ( j >= nb )
-                    return i + 1;
-            }
-        }
-        return NONE;
-    }
-
-    string cut( const string& a, const string& b ) {
-        bool ok[26];
-        fill(ok, ok + 26, false);
-        for ( string::const_iterator it_i = b.begin(); it_i != b.end(); ++ it_i )
-            ok[(*it_i) - 'a'] = true;
-        string res;
-        for ( string::const_iterator it_i = a.begin(); it_i != a.end(); ++ it_i ) {
-            if ( ok[(*it_i) - 'a'] )
-                res += *it_i;
-        }
-        return res;
-    }
-
     LL solve() {
-        a = cut(a, c);
-        if ( a == "" )
-            return 0;
-        int min_len = NONE;
-        for ( int i = 1; i <= 200; ++ i ) {
-            string aa = get_repeated(a, i);
-            int ret = find_subseq(aa, c);
-            if ( ret != NONE ) {
-                min_len = ret;
-                break;
+        LL matches[SIZE];
+        int next[SIZE];
+        int na = a.size(), nc = c.size();
+        for ( int i = 0; i < nc; ++ i ) {
+            int k = i, cnt = 0;
+            for ( int j = 0; j < na; ++ j ) {
+                if ( a[j] == c[k] ) {
+                    k ++;
+                }
+                if ( k >= nc ) {
+                    cnt ++;
+                    k = 0;
+                }
             }
+            matches[i] = cnt;
+            next[i] = k;
         }
-        if ( min_len == NONE || (LL)a.size() * b < min_len )
-            return 0;
-        LL ta = a.size() * b;
-        return ta / d;
+
+        LL sum = 0;
+        int k = 0;
+        for ( int i = 0; i < b; ++ i ) {
+            sum += matches[k];
+            k = next[k];
+        }
+
+        return sum / d;
     }
     
     class Solution: public ISolution {
