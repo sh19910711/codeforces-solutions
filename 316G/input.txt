@@ -1,0 +1,11 @@
+aaab
+2
+aa 0 0
+aab 1 1
+ltntlnen
+3
+n 0 0
+ttlneenl 1 4
+lelllt 1 1
+a
+0
