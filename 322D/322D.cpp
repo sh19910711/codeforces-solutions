@@ -73,6 +73,10 @@ namespace solution {
   const int SIZE = 100 + 11;
   const string ATK = "ATK";
   const string DEF = "DEF";
+  const int NONE = -1;
+  const int ON = 1;
+  const int OFF = 0;
+
   // storages
   int n, m;
   string JT[SIZE];
@@ -91,6 +95,8 @@ namespace solution {
   int remains;
   LL CS_bk[SIZE];
   int remains_bk;
+
+  LL dp[SIZE][SIZE][2];
 
   LL result;
 }
@@ -121,11 +127,62 @@ namespace solution {
 
       sort(CS, CS + m);
       remains = m;
-      backup();
     }
 
     LL calc_max() {
-      return max(calc_max_1(), max(calc_max_2(), max(calc_max_3(), max(calc_max_4(), max(calc_max_1_2(), calc_max_2_2())))));
+      backup();
+
+      for ( int i = 0; i < SIZE; ++ i )
+        for ( int j = 0; j < SIZE; ++ j )
+          for ( int k = 0; k < 2; ++ k )
+            dp[i][j][k] = NONE;
+
+      dp[0][0][0] = dp[0][0][1] = 0;
+      for ( int i = 0; i < m; ++ i ) {
+        for ( int j = 0; j <= n; ++ j ) {
+          for ( int k = 0; k < 2; ++ k ) {
+            if ( dp[i][j][k] == NONE )
+              continue;
+
+            int st = JS[i];
+            int ni = i + 1;
+            int nj = j + 1;
+
+            dp[ni][j][OFF] = max(dp[ni][j][OFF], dp[i][j][k]);
+            dp[ni][nj][OFF] = max(dp[ni][nj][OFF], dp[i][j][k]);
+            dp[i][j][OFF] = max(dp[i][j][OFF], dp[i][j][k]);
+            dp[i][nj][OFF] = max(dp[i][nj][OFF], dp[i][j][k]);
+
+            if ( j == 0 )
+              continue;
+
+            int ind = j - 1;
+            string type = JT[ind];
+            if ( type == ATK && CS[i] >= st ) {
+              int nk = min(ON, k);
+              dp[ni][nj][nk] = max(dp[ni][nj][nk], dp[i][j][k] + CS[i] - st);
+            } else if ( type == DEF && CS[i] > st ) {
+              int nk = min(ON, k);
+              dp[ni][nj][nk] = max(dp[ni][nj][nk], dp[i][j][k]);
+            }
+          }
+        }
+      }
+
+      LL res = 0;
+
+      for ( int i = 0; i <= m; ++ i ) {
+        for ( int j = 0; j <= n; ++ j ) {
+          for ( int k = 0; k < 2; ++ k ) {
+            res = max(res, dp[i][j][k]);
+            if ( j == n && k == ON && dp[i][j][k] != NONE ) {
+              res = max(res, dp[i][j][k] + accumulate(CS + i, CS + m, 0LL));
+            }
+          }
+        }
+      }
+
+      return res;
     }
 
     void backup() {
@@ -167,196 +224,6 @@ namespace solution {
       remains --;
     }
 
-    LL calc_max_1() {
-      reset_backup();
-
-      LL res = 0;
-      int attacked = 0;
-
-      for ( int i = 0; i < attackers && remains > 0; ++ i ) {
-        int st = JAT[i];
-        int k = lower_bound(CS, CS + remains, st) - CS;
-        if ( k == remains )
-          continue;
-        attacked ++;
-        res += CS[k] - st;
-        remove_value(k);
-      }
-
-      for ( int i = 0; i < defenses && remains > 0; ++ i ) {
-        int st = JAT[i];
-        int k = upper_bound(CS, CS + remains, st) - CS;
-        if ( k == remains )
-          continue;
-        attacked ++;
-        remove_value(k);
-      }
-
-      if ( attacked == attackers + defenses && remains > 0 )
-        res += accumulate(CS, CS + remains, 0LL);
-
-      return res;
-    }
-
-    LL calc_max_2() {
-      reset_backup();
-
-      LL res = 0;
-      int attacked = 0;
-
-      for ( int i = 0; i < defenses && remains > 0; ++ i ) {
-        int st = JAT[i];
-        int k = upper_bound(CS, CS + remains, st) - CS;
-        if ( k == remains )
-          continue;
-        attacked ++;
-        remove_value(k);
-      }
-
-      for ( int i = 0; i < attackers && remains > 0; ++ i ) {
-        int st = JAT[i];
-        int k = lower_bound(CS, CS + remains, st) - CS;
-        if ( k == remains )
-          continue;
-        attacked ++;
-        res += CS[k] - st;
-        remove_value(k);
-      }
-
-      if ( attacked == attackers + defenses && remains > 0 )
-        res += accumulate(CS, CS + remains, 0LL);
-
-      return res;
-    }
-
-    LL calc_max_3() {
-      reset_backup();
-
-      LL res = 0;
-      int attacked = 0;
-
-      sort(JAT, JAT + attackers, less<LL>());
-      for ( int i = 0; i < attackers && remains > 0; ++ i ) {
-        int st = JAT[i];
-        int k = lower_bound(CS, CS + remains, st) - CS;
-        if ( k == remains )
-          continue;
-        attacked ++;
-        res += CS[remains - 1] - st;
-        remove_value(remains - 1);
-      }
-
-      for ( int i = 0; i < defenses && remains > 0; ++ i ) {
-        int st = JAT[i];
-        int k = upper_bound(CS, CS + remains, st) - CS;
-        if ( k == remains )
-          continue;
-        attacked ++;
-        remove_value(remains);
-      }
-
-      if ( attacked == attackers + defenses && remains > 0 )
-        res += accumulate(CS, CS + remains, 0LL);
-
-      return res;
-    }
-
-    LL calc_max_4() {
-      reset_backup();
-
-      LL res = 0;
-      int attacked = 0;
-
-      for ( int i = 0; i < defenses && remains > 0; ++ i ) {
-        int st = JAT[i];
-        int k = upper_bound(CS, CS + remains, st) - CS;
-        if ( k == remains )
-          continue;
-        attacked ++;
-        remove_value(remains);
-      }
-
-      sort(JAT, JAT + attackers, less<LL>());
-      for ( int i = 0; i < attackers && remains > 0; ++ i ) {
-        int st = JAT[i];
-        int k = lower_bound(CS, CS + remains, st) - CS;
-        if ( k == remains )
-          continue;
-        attacked ++;
-        res += CS[remains - 1] - st;
-        remove_value(remains - 1);
-      }
-
-      if ( attacked == attackers + defenses && remains > 0 )
-        res += accumulate(CS, CS + remains, 0LL);
-
-      return res;
-    }
-
-    LL calc_max_1_2() {
-      reset_backup();
-
-      LL res = 0;
-      int attacked = 0;
-
-      sort(JAT, JAT + attackers, less<LL>());
-      for ( int i = 0; i < attackers && remains > 0; ++ i ) {
-        int st = JAT[i];
-        int k = lower_bound(CS, CS + remains, st) - CS;
-        if ( k == remains )
-          continue;
-        attacked ++;
-        res += CS[k] - st;
-        remove_value(k);
-      }
-
-      for ( int i = 0; i < defenses && remains > 0; ++ i ) {
-        int st = JAT[i];
-        int k = upper_bound(CS, CS + remains, st) - CS;
-        if ( k == remains )
-          continue;
-        attacked ++;
-        remove_value(k);
-      }
-
-      if ( attacked == attackers + defenses && remains > 0 )
-        res += accumulate(CS, CS + remains, 0LL);
-
-      return res;
-    }
-
-    LL calc_max_2_2() {
-      reset_backup();
-
-      LL res = 0;
-      int attacked = 0;
-
-      for ( int i = 0; i < defenses && remains > 0; ++ i ) {
-        int st = JAT[i];
-        int k = upper_bound(CS, CS + remains, st) - CS;
-        if ( k == remains )
-          continue;
-        attacked ++;
-        remove_value(k);
-      }
-
-      sort(JAT, JAT + attackers, less<LL>());
-      for ( int i = 0; i < attackers && remains > 0; ++ i ) {
-        int st = JAT[i];
-        int k = lower_bound(CS, CS + remains, st) - CS;
-        if ( k == remains )
-          continue;
-        attacked ++;
-        res += CS[k] - st;
-        remove_value(k);
-      }
-
-      if ( attacked == attackers + defenses && remains > 0 )
-        res += accumulate(CS, CS + remains, 0LL);
-
-      return res;
-    }
-    
   private:
     
   };
