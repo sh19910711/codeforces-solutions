@@ -64,34 +64,34 @@ namespace solution {
 namespace solution {
   // namespaces, types
   using namespace std;
-  typedef stack<II> Stack;
   
 }
 
 // @snippet<sh19910711/contest:solution/variables-area.cpp>
 namespace solution {
   // constant vars
-  const int SIZE          = 500 + 11;
-  const int MAX_TIMES     = 1000000 + 11;
-  const int TYPE_PUT_BLUE = 0;
-  const int TYPE_PUT_RED  = 1;
-  const int TYPE_DEL      = 2;
-  const char CHAR_BLUE    = 'B';
-  const char CHAR_RED     = 'R';
-  const char CHAR_DEL     = 'D';
-  const char WALL         = '#';
-  const char EMPTY        = '.';
+  const int GRID_SIZE = 500 + 11;
+  const int SIZE = 1000000 + 11;
+
+  const char CHAR_EMPTY = '.';
+  const char CHAR_BLUE = 'B';
+  const char CHAR_RED = 'R';
+
+  const string TYPE_BLUE = "B";
+  const string TYPE_RED = "R";
+  const string TYPE_DELETE = "D";
+
+  const int dr[4] = {1, -1, 0, 0};
+  const int dc[4] = {0, 0, 1, -1};
 
   // storages
   int H, W;
-  string grid[SIZE];
+  string grid[GRID_SIZE];
 
-  int times, cur;
-  int T[MAX_TIMES];
-  int R[MAX_TIMES];
-  int C[MAX_TIMES];
-
-  Stack st;
+  int operations;
+  string T[SIZE];
+  int R[SIZE];
+  int C[SIZE];
 }
 
 // @snippet<sh19910711/contest:solution/solver-area.cpp>
@@ -99,67 +99,48 @@ namespace solution {
   class Solver {
   public:
     void solve() {
+      for ( int i = 0; i < H; ++ i )
+        for ( int j = 0; j < W; ++ j )
+          rec(i, j, i, j);
+    }
 
-      // 横
-      for ( int i = 0; i < H; ++ i ) {
-        st = Stack();
-        for ( int j = 0; j < W; ++ j ) {
-          if ( grid[i][j] == WALL ) {
-            if ( st.empty() )
-              continue;
+    void rec( int r, int c, int sr, int sc ) {
+      printf("before: (%d, %d)\n", r, c);
+      print_grid();
+      if ( grid[r][c] != CHAR_EMPTY )
+        return;
 
-            II put_g = st.top();
-            st.pop();
-            cur --;
-            T[cur] = TYPE_PUT_RED;
-            R[cur] = put_g.first;
-            C[cur] = put_g.second;
-            cur ++;
+      put_blue(r, c);
 
-            while ( st.size() >= 2 ) {
-              II rep_to_g = st.top();
-              st.pop();
-              T[cur] = TYPE_DEL;
-              R[cur] = rep_to_g.first;
-              C[cur] = rep_to_g.second;
-              cur ++;
-              T[cur] = TYPE_PUT_RED;
-              R[cur] = rep_to_g.first;
-              C[cur] = rep_to_g.second;
-              cur ++;
-            }
-
-          } else {
-            T[cur] = TYPE_PUT_BLUE;
-            R[cur] = i;
-            C[cur] = j;
-            cur ++;
-            st.push(II(i, j));
-          }
-        }
+      for ( int k = 0; k < 4; ++ k ) {
+        int nr = r + dr[k];
+        int nc = c + dc[k];
+        if ( nr < 0 || nr >= H || nc < 0 || nc >= W )
+          continue;
+        rec(nr, nc, sr, sc);
       }
 
-      // 縦
-      int pre_cur = cur;
-      st = Stack();
-      for ( int i = 0; i + 1 < pre_cur; ++ i ) {
-        if ( T[i] == TYPE_PUT_BLUE && C[i] == 1 + C[i + 1] ) {
-          st.push(II(R[i], C[i]));
-        } else {
-          while ( st.size() >= 2 ) {
-            II rep_to_g = st.top();
-            st.pop();
-              T[cur] = TYPE_DEL;
-              R[cur] = rep_to_g.first;
-              C[cur] = rep_to_g.second;
-              cur ++;
-              T[cur] = TYPE_PUT_RED;
-              R[cur] = rep_to_g.first;
-              C[cur] = rep_to_g.second;
-              cur ++;
-          }
-        }
+      if ( r != sr || c != sc ) {
+        put_red(r, c);
       }
+
+      printf("after: (%d, %d)\n", r, c);
+      print_grid();
+    }
+
+    void put_red( int r, int c ) {
+      grid[r][c] = CHAR_RED;
+    }
+
+    void put_blue( int r, int c ) {
+      grid[r][c] = CHAR_BLUE;
+    }
+
+    void print_grid() {
+      cout << "grid:" << endl;
+      for ( int i = 0; i < H; ++ i )
+        cout << grid[i] << endl;
+      cout << endl;
     }
     
   private:
@@ -182,7 +163,7 @@ namespace solution {
     }
 
     void init() {
-      cur = 0;
+      operations = 0;
     }
 
     bool input() {
@@ -194,18 +175,9 @@ namespace solution {
     }
 
     void output() {
-      cout << cur << endl;
-      for ( int i = 0; i < cur; ++ i ) {
-        if ( T[i] == TYPE_DEL ) {
-          cout << CHAR_DEL;
-        } else if ( T[i] == TYPE_PUT_BLUE ) {
-          cout << CHAR_BLUE;
-        } else if ( T[i] == TYPE_PUT_RED ) {
-          cout << CHAR_RED;
-        }
-        cout << " " << C[i] + 1 << " " << R[i] + 1 << endl;
-      }
-      cout << endl;
+      cout << operations << endl;
+      for ( int i = 0; i < operations; ++ i )
+        cout << T[i] << " " << C[i] + 1 << " " << R[i] + 1 << endl;
     }
     
   private:
