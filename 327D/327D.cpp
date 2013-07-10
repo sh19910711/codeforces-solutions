@@ -105,8 +105,6 @@ namespace solution {
     }
 
     void rec( int r, int c, int sr, int sc ) {
-      printf("before: (%d, %d)\n", r, c);
-      print_grid();
       if ( grid[r][c] != CHAR_EMPTY )
         return;
 
@@ -124,16 +122,28 @@ namespace solution {
         put_red(r, c);
       }
 
-      printf("after: (%d, %d)\n", r, c);
-      print_grid();
     }
 
     void put_red( int r, int c ) {
       grid[r][c] = CHAR_RED;
+
+      T[operations] = TYPE_DELETE;
+      R[operations] = r;
+      C[operations] = c;
+      operations ++;
+
+      T[operations] = TYPE_RED;
+      R[operations] = r;
+      C[operations] = c;
+      operations ++;
     }
 
     void put_blue( int r, int c ) {
       grid[r][c] = CHAR_BLUE;
+      T[operations] = TYPE_BLUE;
+      R[operations] = r;
+      C[operations] = c;
+      operations ++;
     }
 
     void print_grid() {
@@ -177,7 +187,7 @@ namespace solution {
     void output() {
       cout << operations << endl;
       for ( int i = 0; i < operations; ++ i )
-        cout << T[i] << " " << C[i] + 1 << " " << R[i] + 1 << endl;
+        cout << T[i] << " " << R[i] + 1 << " " << C[i] + 1 << endl;
     }
     
   private:
