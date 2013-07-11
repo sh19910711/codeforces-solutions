@@ -71,34 +71,25 @@ namespace solution {
 namespace solution {
   // constant vars
   const int SIZE = 100 + 11;
+  const int NONE = std::numeric_limits<int>::min() / 2;
+  const int ON  = 1;
+  const int OFF = 0;
+
   const string ATK = "ATK";
   const string DEF = "DEF";
-  const int NONE = -1;
-  const int ON = 1;
-  const int OFF = 0;
 
   // storages
   int n, m;
   string JT[SIZE];
-  LL JS[SIZE];
+  int JS[SIZE];
+  int atk_num;
+  int atk[SIZE];
+  int def_num;
+  int def[SIZE];
+  int CS[SIZE];
 
-  LL JAT[SIZE];
-  LL JDF[SIZE];
-  int attackers;
-  int defenses;
-  LL JAT_bk[SIZE];
-  LL JDF_bk[SIZE];
-  int attackers_bk;
-  int defenses_bk;
-
-  LL CS[SIZE];
-  int remains;
-  LL CS_bk[SIZE];
-  int remains_bk;
-
-  LL dp[SIZE][SIZE][2];
-
-  LL result;
+  int max_damages[SIZE][SIZE][SIZE][2];
+  int result;
 }
 
 // @snippet<sh19910711/contest:solution/solver-area.cpp>
@@ -106,124 +97,63 @@ namespace solution {
   class Solver {
   public:
     void solve() {
-      prepare();
-      result = calc_max();
-    }
-
-    void prepare() {
-      attackers = 0;
-      defenses = 0;
-      for ( int i = 0; i < n; ++ i ) {
-        if ( JT[i] == ATK ) {
-          JAT[attackers] = JS[i];
-          attackers ++;
-        } else if ( JT[i] == DEF ) {
-          JDF[defenses] = JS[i];
-          defenses ++;
-        }
-      }
-      sort(JAT, JAT + attackers, greater<LL>());
-      sort(JDF, JDF + defenses, greater<LL>());
+      pre_john();
 
       sort(CS, CS + m);
-      remains = m;
+      sort(atk, atk + atk_num);
+      sort(def, def + def_num);
+
+      result = get_max();
     }
 
-    LL calc_max() {
-      backup();
-
-      for ( int i = 0; i < SIZE; ++ i )
-        for ( int j = 0; j < SIZE; ++ j )
-          for ( int k = 0; k < 2; ++ k )
-            dp[i][j][k] = NONE;
-
-      dp[0][0][0] = dp[0][0][1] = 0;
-      for ( int i = 0; i < m; ++ i ) {
-        for ( int j = 0; j <= n; ++ j ) {
-          for ( int k = 0; k < 2; ++ k ) {
-            if ( dp[i][j][k] == NONE )
-              continue;
-
-            int st = JS[i];
-            int ni = i + 1;
-            int nj = j + 1;
-
-            dp[ni][j][OFF] = max(dp[ni][j][OFF], dp[i][j][k]);
-            dp[ni][nj][OFF] = max(dp[ni][nj][OFF], dp[i][j][k]);
-            dp[i][j][OFF] = max(dp[i][j][OFF], dp[i][j][k]);
-            dp[i][nj][OFF] = max(dp[i][nj][OFF], dp[i][j][k]);
-
-            if ( j == 0 )
-              continue;
-
-            int ind = j - 1;
-            string type = JT[ind];
-            if ( type == ATK && CS[i] >= st ) {
-              int nk = min(ON, k);
-              dp[ni][nj][nk] = max(dp[ni][nj][nk], dp[i][j][k] + CS[i] - st);
-            } else if ( type == DEF && CS[i] > st ) {
-              int nk = min(ON, k);
-              dp[ni][nj][nk] = max(dp[ni][nj][nk], dp[i][j][k]);
-            }
-          }
+    void pre_john() {
+      atk_num = 0;
+      def_num = 0;
+      for ( int i = 0; i < n; ++ i ) {
+        if ( JT[i] == ATK ) {
+          atk[atk_num ++] = JS[i];
+        } else if ( JT[i] == DEF ) {
+          def[def_num ++] = JS[i];
         }
       }
+    }
 
-      LL res = 0;
+    int get_max() {
+      int res1 = rec(0, 0, 0, OFF);
+      int res2 = rec(0, 0, 0, ON);
+      return max(res1, res2);
+    }
 
-      for ( int i = 0; i <= m; ++ i ) {
-        for ( int j = 0; j <= n; ++ j ) {
-          for ( int k = 0; k < 2; ++ k ) {
-            res = max(res, dp[i][j][k]);
-            if ( j == n && k == ON && dp[i][j][k] != NONE ) {
-              res = max(res, dp[i][j][k] + accumulate(CS + i, CS + m, 0LL));
-            }
-          }
+    int rec( int i, int j, int k, int flag ) {
+      if ( max_damages[i][j][k][flag] != NONE )
+        return max_damages[i][j][k][flag];
+
+      if ( k >= m ) {
+        if ( flag == ON ) {
+          if ( i < atk_num || j < def_num )
+            return NONE;
+          return 0;
         }
+        return 0;
       }
 
-      return res;
+      int res = NONE;
+
+      if ( k < m )
+        res = max(res, rec(i, j, k + 1, flag));
+
+      if ( k < m )
+        res = max(res, rec(i, j, k + 1, ON) + CS[k]);
+
+      if ( i < atk_num && k < m && CS[k] >= atk[i] )
+        res = max(res, rec(i + 1, j, k + 1, flag) + CS[k] - atk[i]);
+
+      if ( j < def_num && k < m && CS[k] > def[j] )
+        res = max(res, rec(i, j + 1, k + 1, flag));
+
+      return max_damages[i][j][k][flag] = res;
     }
-
-    void backup() {
-      for ( int i = 0; i < attackers; ++ i )
-        JAT_bk[i] = JAT[i];
-      for ( int i = 0; i < defenses; ++ i )
-        JDF_bk[i] = JDF[i];
-      attackers_bk = attackers;
-      defenses_bk = defenses;
-
-      remains_bk = remains;
-      for ( int i = 0; i < remains; ++ i )
-        CS_bk[i] = CS[i];
-    }
-
-    void reset_backup() {
-      for ( int i = 0; i < attackers_bk; ++ i )
-        JAT[i] = JAT_bk[i];
-      for ( int i = 0; i < defenses_bk; ++ i )
-        JDF[i] = JDF_bk[i];
-      attackers = attackers_bk;
-      defenses = defenses_bk;
-
-      remains = remains_bk;
-      for ( int i = 0; i < remains; ++ i )
-        CS[i] = CS_bk[i];
-    }
-
-    void print_cs() {
-      for ( int i = 0; i < remains; ++ i ) {
-        cout << i << ": " << CS[i] << endl;
-      }
-    }
-
-    void remove_value( int pos ) {
-      for ( int i = pos; i + 1 < remains; ++ i ) {
-        CS[i] = CS[i + 1];
-      }
-      remains --;
-    }
-
+    
   private:
     
   };
@@ -241,6 +171,15 @@ namespace solution {
       solver.solve();
       output();
       return true;
+    }
+
+    void init() {
+      for ( int i = 0; i < SIZE; ++ i )
+        for ( int j = 0; j < SIZE; ++ j )
+          for ( int k = 0; k < SIZE; ++ k )
+            for ( int l = 0; l < 2; ++ l )
+              max_damages[i][j][k][l] = NONE;
+      result = NONE;
     }
 
     bool input() {
