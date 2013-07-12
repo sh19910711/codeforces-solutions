@@ -20,125 +20,171 @@
 #include <cstring>
 #include <cmath>
 
-// @snippet<sh19910711/contest:solution/typedef.cpp>
-namespace solution {
-    typedef std::istringstream ISS;
-    typedef std::ostringstream OSS;
-    typedef std::vector<std::string> VS;
-    typedef long long LL;
-    typedef int INT;
-    typedef std::vector<INT> VI;
-    typedef std::vector<VI> VVI;
-    typedef std::pair<INT,INT> II;
-    typedef std::vector<II> VII;
-}
-
 // @snippet<sh19910711/contest:solution/interface.cpp>
 namespace solution {
-    class ISolution {
-    public:
-        virtual void init() {};
-        virtual bool input() { return false; };
-        virtual void output() {};
-        virtual int run() = 0;
-    };
+  class ISolution {
+  public:
+    virtual int run() = 0;
+    
+  protected:
+    virtual bool action() = 0;
+    virtual void init() {};
+    virtual bool input() { return false; };
+    virtual void output() {};
+    
+  };
+}
+
+// @snippet<sh19910711/contest:solution/solution-base.cpp>
+namespace solution {
+  class SolutionBase: public ISolution {
+  public:
+    virtual int run() {
+      while ( action() );
+      return 0;
+    }
+    
+  };
+}
+
+// @snippet<sh19910711/contest:solution/typedef.cpp>
+namespace solution {
+  typedef std::istringstream ISS;
+  typedef std::ostringstream OSS;
+  typedef std::vector<std::string> VS;
+  typedef long long LL;
+  typedef int INT;
+  typedef std::vector<INT> VI;
+  typedef std::vector<VI> VVI;
+  typedef std::pair<INT,INT> II;
+  typedef std::vector<II> VII;
+}
+
+// @snippet<sh19910711/contest:solution/namespace-area.cpp>
+namespace solution {
+  // namespaces, types
+  using namespace std;
+  
+}
+
+// @snippet<sh19910711/contest:solution/variables-area.cpp>
+namespace solution {
+  // constant vars
+  const int HOLES = 300 + 11;
+  const int SIZE = 100000 + 11;
+  const LL NONE = std::numeric_limits<LL>::max() / 2;
+  // storages
+  int n, m, k;
+  int L[SIZE];
+  int R[SIZE];
+  LL C[SIZE];
+  LL result;
+  LL table[HOLES][HOLES];
+  LL min_cost[HOLES][HOLES * 2];
+}
+
+// @snippet<sh19910711/contest:solution/solver-area.cpp>
+namespace solution {
+  class Solver {
+  public:
+    void solve() {
+      result = get_min_cost();
+    }
+
+    LL get_min_cost() {
+      for ( int i = 0; i < m; ++ i ) {
+        int l = L[i] - 1;
+        int r = R[i] - 1;
+        int len = r - l + 1;
+        for ( int j = 0; j < len; ++ j )
+          table[l][l + j + 1] = min(table[l][l + j + 1], C[i]);
+        for ( int j = 0; j < len; ++ j )
+          table[r - j][r + 1] = min(table[r - j][r + 1], C[i]);
+      }
+
+      for ( int i = 0; i < n; ++ i )
+        min_cost[i][0] = 0;
+
+      // [from, to)
+      for ( int from = 0; from < n; ++ from ) {
+        for ( int to = from + 1; to <= n; ++ to ) {
+          if ( table[from][to] == NONE )
+            continue;
+          for ( int num = 0; num <= n; ++ num ) {
+            LL cur = min_cost[from][num];
+            if ( cur == NONE )
+              continue;
+            int len = to - from;
+            int next_num = num + len;
+            min_cost[to][next_num] = min(min_cost[to][next_num], cur + table[from][to]); 
+          }
+        }
+        for ( int num = 0; num <= n; ++ num )
+          min_cost[from + 1][num] = min(min_cost[from + 1][num], min_cost[from][num]);
+      }
+
+      LL res = NONE;
+      for ( int i = 0; i <= n; ++ i ) {
+        for ( int x = k; x <= 2 * n; ++ x ) {
+          res = min(res, min_cost[i][x]);
+        }
+      }
+      return res;
+    }
+    
+  private:
+    
+  };
 }
 
 // @snippet<sh19910711/contest:solution/solution.cpp>
 namespace solution {
-    using namespace std;
-
-    const int WIDTH = 300 + 11;
-    const int SIZE = 100000 + 11;
-    const int NONE = -1;
-    const LL INF = std::numeric_limits<LL>::max();
-
-    class Range {
-    public:
-        int l, r, c;
-        Range() {}
-        Range( int l, int r, int c ): l(l), r(r), c(c) {}
-        friend istream& operator >>( istream& is, Range& r ) {
-            return is >> r.l >> r.r >> r.c;
-        }
-        bool operator < ( const Range& range ) const {
-            return l < range.l;
-        }
-    };
-
-    int N, M, K;
-    Range R[SIZE];
-    LL dp[WIDTH][WIDTH];
-
-    void sort_ranges() {
-        sort(R, R + M);
+  class Solution: public SolutionBase {
+  public:
+  protected:
+    virtual bool action() {
+      init();
+      if ( ! input() )
+        return false;
+      solver.solve();
+      output();
+      return true;
     }
 
-    LL solve() {
-        sort_ranges();
-
-        for ( int i = 0; i <= N; ++ i )
-            dp[i][0] = 0;
-
-        for ( int j = 0; j <= N; ++ j ) {
-            for ( int i = 0; i <= N; ++ i ) {
-                if ( dp[i][j] == INF )
-                    continue;
-                for ( int k = lower_bound(R, R + M, Range(i, -1, -1)) - R; k < M; ++ k ) {
-                    int ni = max(i, R[k].r);
-                    int nj = j;
-                    if ( i > R[k].r )
-                        continue;
-                    else if ( R[k].l <= i && i <= R[k].r ) {
-                        nj += R[k].r - i;
-                    } else {
-                        nj += R[k].r - R[k].l + 1;
-                    }
-                    dp[ni][nj] = min(dp[ni][nj], dp[i][j] + R[k].c);
-                }
-            }
-        }
-
-        LL res = INF;
-        for ( int i = 0; i <= N; ++ i )
-            for ( int j = K; j <= N; ++ j )
-                res = min(res, dp[i][j]);
-        return res == INF ? NONE : res;
+    void init() {
+      result = NONE;
+      for ( int i = 0; i < HOLES; ++ i )
+        for ( int j = 0; j < HOLES; ++ j )
+          table[i][j] = NONE;
+      for ( int i = 0; i < HOLES; ++ i )
+        for ( int j = 0; j < 2 * HOLES; ++ j )
+          min_cost[i][j] = NONE;
     }
 
-    class Solution: public ISolution {
-    public:
+    bool input() {
+      if ( ! ( cin >> n >> m >> k ) )
+        return false;
+      for ( int i = 0; i < m; ++ i )
+        cin >> L[i] >> R[i] >> C[i];
+      return true;
+    }
 
-        void init() {
-            for ( int i = 0; i < WIDTH; ++ i )
-                for ( int j = 0; j < WIDTH; ++ j )
-                    dp[i][j] = INF;
-        }
-
-        bool input() {
-            if ( ! ( cin >> N >> M >> K ) )
-                return false;
-            for ( int i = 0; i < M; ++ i )
-                cin >> R[i];
-            return true;
-        }
-
-        void output( LL result ) {
-            cout << result << endl;
-        }
-
-        int run() {
-            while ( init(), input() ) {
-                output(solve());
-            }
-            return 0;
-        }
-
-    };
+    void output() {
+      if ( result == NONE ) {
+        cout << -1 << endl;
+      } else {
+        cout << result << endl;
+      }
+    }
+    
+  private:
+    Solver solver;
+    
+  };
 }
 
 // @snippet<sh19910711/contest:main.cpp>
 int main() {
-    return solution::Solution().run();
+  return solution::Solution().run();
 }
 
