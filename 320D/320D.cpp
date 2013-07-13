@@ -64,25 +64,7 @@ namespace solution {
 namespace solution {
   // namespaces, types
   using namespace std;
-  
-  class Node {
-  public:
-    int pos;
-    Node* prev_node;
-    Node* next_node;
-    bool alive_flag;
-    Node( int pos, Node* prev_node, Node* next_node ):
-      pos(pos),
-      prev_node(prev_node),
-      next_node(next_node),
-      alive_flag(true) {
-      }
-    friend ostream& operator << ( ostream& os, const Node& node ) {
-      return os << "(pos = " << node.pos << ", links = " << node.prev_node << ", " << node.next_node << ", alive? = " << node.alive_flag << ")";
-    }
-  };
-  typedef vector<Node> Nodes;
-
+  typedef set<int> Set;
 }
 
 // @snippet<sh19910711/contest:solution/variables-area.cpp>
@@ -93,7 +75,10 @@ namespace solution {
   // storages
   int n;
   int A[SIZE];
-  Nodes nodes;
+
+  Set deads;
+  int prev[SIZE];
+  int next[SIZE];
 
   int result;
 }
@@ -107,53 +92,53 @@ namespace solution {
     }
 
     int get_steps() {
-      for ( int i = 0; i < n; ++ i ) {
-        nodes.push_back(Node(i, NULL, NULL));
-      }
-      for ( int i = 0; i < n; ++ i )
-        if ( i - 1 >= 0 )
-          nodes[i - 1].next_node = &nodes[i];
-      for ( int i = 0; i < n; ++ i )
-        if ( i + 1 < n )
-          nodes[i + 1].prev_node = &nodes[i];
+      for ( int i = n; i < 2 * n; ++ i )
+        deads.insert(i);
 
-      std::vector<Node*> current;
-      for ( int i = 0; i < n; ++ i )
-        current.push_back(&nodes[i]);
+      for ( int i = 0; i < n; ++ i ) {
+        prev[i] = i - 1;
+        next[i] = i + 1;
+      }
+
+      VI current;
+      for ( int i = 1; i < n; ++ i )
+        current.push_back(i);
 
       for ( int t = 0; t < SIZE; ++ t ) {
 
-        if ( current.empty() )
-          return t;
-
-        std::vector<Node*> dead;
-        Node *cur = current[0];
-        while ( cur && cur->next_node ) {
-          if ( A[cur->pos] > A[cur->next_node->pos] ) {
-            dead.push_back(cur->next_node);
-            cur->next_node->alive_flag = false;
-          }
-          cur = cur->next_node;
-        }
-
-        if ( dead.empty() )
-          return t;
-
-        std::vector<Node*> next;
-        for ( vector<Node*>::iterator it_i = dead.begin(); it_i != dead.end(); ++ it_i ) {
-          Node* p = *it_i;
-          if ( p->prev_node )
-            p->prev_node->next_node = p->next_node;
-          if ( p->next_node ) {
-            p->next_node->prev_node = p->prev_node;
-            if ( p->next_node->alive_flag )
-              next.push_back(p->next_node);
+        VI cand;
+        for ( VI::iterator it_i = current.begin(); it_i != current.end(); ++ it_i ) {
+          // a, b
+          int k = *it_i;
+          int a = A[prev[k]];
+          int b = A[k];
+          if ( a > b ) {
+            deads.insert(k);
+            cand.push_back(k);
           }
         }
-        current = next;
+
+        if ( cand.empty() )
+          return t;
+
+        VI next_current;
+        for ( VI::iterator it_i = cand.begin(); it_i != cand.end(); ++ it_i ) {
+          // a, b, c => a, c]
+          int k = *it_i;
+          int a = prev[k];
+          int c = next[k];
+          next[a] = c;
+          prev[c] = a;
+
+          // x, x, o, -> o
+          if ( ! deads.count(c) )
+            next_current.push_back(c);
+        }
+
+        current = next_current;
       }
 
-      return -2;
+      return -3;
     }
     
   private:
@@ -176,7 +161,7 @@ namespace solution {
     }
 
     void init() {
-      nodes.clear();
+      deads.clear();
     }
 
     bool input() {
