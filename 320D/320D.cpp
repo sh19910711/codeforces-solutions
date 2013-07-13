@@ -65,19 +65,36 @@ namespace solution {
   // namespaces, types
   using namespace std;
   
+  class Node {
+  public:
+    int pos;
+    Node* prev_node;
+    Node* next_node;
+    bool alive_flag;
+    Node( int pos, Node* prev_node, Node* next_node ):
+      pos(pos),
+      prev_node(prev_node),
+      next_node(next_node),
+      alive_flag(true) {
+      }
+    friend ostream& operator << ( ostream& os, const Node& node ) {
+      return os << "(pos = " << node.pos << ", links = " << node.prev_node << ", " << node.next_node << ", alive? = " << node.alive_flag << ")";
+    }
+  };
+  typedef vector<Node> Nodes;
+
 }
 
 // @snippet<sh19910711/contest:solution/variables-area.cpp>
 namespace solution {
   // constant vars
   const int SIZE = 100000 + 11;
+  const int NONE = -1;
   // storages
   int n;
   int A[SIZE];
-  int B[2][SIZE];
-  int BC;
-  int bcur;
-  int C[2][SIZE];
+  Nodes nodes;
+
   int result;
 }
 
@@ -86,83 +103,57 @@ namespace solution {
   class Solver {
   public:
     void solve() {
-      result = get_times();
+      result = get_steps();
     }
 
-    void print_bc( int cur ) {
-      cout << "B: " << endl;
-      for ( int i = 0; i < BC; ++ i ) {
-        cout << i << ": " << B[cur][i] << endl;
-      }
-      cout << "C: " << endl;
-      for ( int i = 0; i < BC; ++ i ) {
-        cout << i << ": " << C[cur][i] << endl;
-      }
-    }
-
-    int get_times() {
-      if ( n == 1 )
-        return 0;
-
-      int tmp = 0;
-      int prev = 0;
-      BC = 0;
+    int get_steps() {
       for ( int i = 0; i < n; ++ i ) {
-        if ( i + 1 < n && A[i] < A[i + 1] ) {
-          C[0][BC] = tmp + 1;
-          B[0][BC] = A[prev];
-          prev = i + 1;
-          tmp = 0;
-          BC ++;
-        } else {
-          tmp ++;
+        nodes.push_back(Node(i, NULL, NULL));
+      }
+      for ( int i = 0; i < n; ++ i )
+        if ( i - 1 >= 0 )
+          nodes[i - 1].next_node = &nodes[i];
+      for ( int i = 0; i < n; ++ i )
+        if ( i + 1 < n )
+          nodes[i + 1].prev_node = &nodes[i];
+
+      std::vector<Node*> current;
+      for ( int i = 0; i < n; ++ i )
+        current.push_back(&nodes[i]);
+
+      for ( int t = 0; t < SIZE; ++ t ) {
+
+        if ( current.empty() )
+          return t;
+
+        std::vector<Node*> dead;
+        Node *cur = current[0];
+        while ( cur && cur->next_node ) {
+          if ( A[cur->pos] > A[cur->next_node->pos] ) {
+            dead.push_back(cur->next_node);
+            cur->next_node->alive_flag = false;
+          }
+          cur = cur->next_node;
         }
-      }
-      if ( tmp > 0 ) {
-        C[0][BC] = tmp;
-        B[0][BC] = A[prev];
-        BC ++;
-      }
 
-      if ( BC == 0 )
-        return 0;
+        if ( dead.empty() )
+          return t;
 
-      if ( BC == 1 )
-        return 0;
-
-      for ( int t = 0; t < n; ++ t ) {
-        int cur = ( t & 1 );
-        int next = ( cur ^ 1 ) & 1;
-        
-        if ( BC == 1 )
-          return t * ( C[cur][0] - 1);
-
-        int m = BC;
-        BC = 0;
-
-        int tmp = 0;
-        int prev = 0;
-        BC = 0;
-        for ( int i = 0; i < m; ++ i ) {
-          if ( i + 1 < m && A[i] < A[i + 1] ) {
-            C[next][BC] = tmp + 1;
-            B[next][BC] = B[cur][prev];
-            prev = i + 1;
-            tmp = 0;
-            BC ++;
-          } else {
-            tmp ++;
+        std::vector<Node*> next;
+        for ( vector<Node*>::iterator it_i = dead.begin(); it_i != dead.end(); ++ it_i ) {
+          Node* p = *it_i;
+          if ( p->prev_node )
+            p->prev_node->next_node = p->next_node;
+          if ( p->next_node ) {
+            p->next_node->prev_node = p->prev_node;
+            if ( p->next_node->alive_flag )
+              next.push_back(p->next_node);
           }
         }
-        if ( tmp > 0 ) {
-          C[next][BC] = tmp;
-          B[next][BC] = B[cur][prev];
-          BC ++;
-        }
-
+        current = next;
       }
 
-      return -1;
+      return -2;
     }
     
   private:
@@ -182,6 +173,10 @@ namespace solution {
       solver.solve();
       output();
       return true;
+    }
+
+    void init() {
+      nodes.clear();
     }
 
     bool input() {
