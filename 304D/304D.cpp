@@ -20,135 +20,203 @@
 #include <cstring>
 #include <cmath>
 
-// @snippet<sh19910711/contest:solution/typedef.cpp>
-namespace solution {
-    typedef std::istringstream ISS;
-    typedef std::ostringstream OSS;
-    typedef std::vector<std::string> VS;
-    typedef long long LL;
-    typedef long double LD;
-    typedef int INT;
-    typedef std::vector<INT> VI;
-    typedef std::vector<VI> VVI;
-    typedef std::pair<INT,INT> II;
-    typedef std::vector<II> VII;
-}
-
 // @snippet<sh19910711/contest:solution/interface.cpp>
 namespace solution {
-    class ISolution {
-    public:
-        virtual void init() {};
-        virtual bool input() { return false; };
-        virtual void output() {};
-        virtual int run() = 0;
-    };
+  class SolutionInterface {
+  public:
+    virtual int run() = 0;
+    
+  protected:
+    virtual void pre_calc() {}
+    virtual bool action() = 0;
+    virtual void init() {};
+    virtual bool input() { return false; };
+    virtual void output() {};
+    
+    SolutionInterface() {}
+    
+  private:
+    
+  };
+}
+
+// @snippet<sh19910711/contest:solution/solution-base.cpp>
+namespace solution {
+  class SolutionBase: public SolutionInterface {
+  public:
+    virtual int run() {
+      pre_calc();
+      while ( action() );
+      return 0;
+    }
+    
+  };
+}
+
+// @snippet<sh19910711/contest:solution/typedef.cpp>
+namespace solution {
+  typedef std::istringstream ISS;
+  typedef std::ostringstream OSS;
+  typedef std::vector<std::string> VS;
+  typedef long long LL;
+  typedef int INT;
+  typedef std::vector<INT> VI;
+  typedef std::vector<VI> VVI;
+  typedef std::pair<INT,INT> II;
+  typedef std::vector<II> VII;
+}
+
+// @snippet<sh19910711/contest:io/pair.cpp>
+namespace io {
+  template <class A, class B> std::ostream& operator<<( std::ostream& os, const std::pair<A,B>& p ) {
+    return os << p.first << " " << p.second;
+  }
+  template <class A, class B> std::istream& operator>>( std::istream& is, std::pair<A,B>& p ) {
+    return is >> p.first >> p.second;
+  }
 }
 
 // @snippet<sh19910711/contest:math/gcd.cpp>
 namespace math {
-    template <class T> T gcd( T a, T b ) {
-        T i, j;
-        for ( i = 0; ! ( a & 1 ); ++ i ) a >>= 1;
-        for ( j = 0; ! ( b & 1 ); ++ j ) b >>= 1;
-        while ( b != a ) {
-            b -= a;
-            if ( b < 0 ) a += b, b = -b;
-            while ( ! ( b & 1 ) ) b >>= 1;
-        }
-        return a << std::min( i, j );
+  template <class T> T gcd( T a, T b ) {
+    T i, j;
+    for ( i = 0; ! ( a & 1 ); ++ i ) a >>= 1;
+    for ( j = 0; ! ( b & 1 ); ++ j ) b >>= 1;
+    while ( b != a ) {
+      b -= a;
+      if ( b < 0 ) a += b, b = -b;
+      while ( ! ( b & 1 ) ) b >>= 1;
     }
+    return a << std::min( i, j );
+  }
+}
+
+// @snippet<sh19910711/contest:solution/namespace-area.cpp>
+namespace solution {
+  // namespaces, types
+  using namespace std;
+  using namespace io;
+  typedef double Double;
+  typedef pair <II, II> Rect;
+}
+
+// @snippet<sh19910711/contest:solution/variables-area.cpp>
+namespace solution {
+  // constant vars
+  const LL INF = std::numeric_limits<LL>::max();
+  
+  // storages
+  LL n, m;
+  LL x, y;
+  LL a, b;
+  
+  Rect result;
+}
+
+// @snippet<sh19910711/contest:solution/solver-area.cpp>
+namespace solution {
+  class Solver {
+  public:
+    void solve() {
+      LL cd = math::gcd(a, b);
+      a /= cd;
+      b /= cd;
+      
+      Double scale = floor(get_maximum_scale(a, b, n, m));
+      
+      LL w = a * scale;
+      LL h = b * scale;
+      LL x1 = max(0LL, x - (LL)ceil((Double)w / 2));
+      LL y1 = max(0LL, y - (LL)ceil((Double)h / 2));
+      LL x2 = x1 + w;
+      LL y2 = y1 + h;
+      while ( x2 > n ) {
+        x1 --;
+        x2 --;
+      }
+      while ( y2 > m ) {
+        y1 --;
+        y2 --;
+      }
+      result = Rect(II(x1, y1), II(x2, y2));
+      Double min_diff = abs((Double)( x1 + x2 ) / 2.0 - x) + abs((Double)( y1 + y2 ) / 2.0 - y);
+      
+      for ( int offset_x = -1000; offset_x < 1000; ++ offset_x ) {
+        for ( int offset_y = -1000; offset_y < 1000; ++ offset_y ) {
+          LL nx1 = x1 + offset_x;
+          LL ny1 = y1 + offset_y;
+          LL nx2 = x2 + offset_x;
+          LL ny2 = y2 + offset_y;
+          if ( nx1 < 0 || ny1 < 0 || nx2 < 0 || ny2 < 0 )
+            continue;
+          if ( nx2 > n || ny2 > m )
+            continue;
+          if ( ! ( nx1 <= x && x <= nx2 && ny1 <= y && y <= ny2 ) )
+            continue;
+          Double diff = abs((Double)( nx1 + nx2 ) / 2.0 - x) + abs((Double)( ny1 + ny2 ) / 2.0 - y);
+          if ( diff > min_diff )
+            continue;
+          Rect rect(II(nx1, ny1), II(nx2, ny2));
+          result = min(result, rect);
+        }
+      }
+    }
+    
+    Double get_maximum_scale( Double a, Double b, Double n, Double m ) {
+      Double lb = 0.0;
+      Double ub = 1000000000.0 + 11.0;
+      for ( int i = 0; i < 100; ++ i ) {
+        Double mid = ( lb + ub ) / 2.0;
+        if ( a * mid <= n && b * mid <= m ) {
+          lb = mid;
+        } else {
+          ub = mid;
+        }
+      }
+      return lb;
+    }
+    
+  private:
+    
+  };
 }
 
 // @snippet<sh19910711/contest:solution/solution.cpp>
 namespace solution {
-    using namespace std;
-    
-    typedef pair <LL, LL> Pos;
-    typedef pair <Pos, Pos> Rect;
-    typedef pair <LD, Rect> Result;
-    
-    const LL INF = std::numeric_limits<LL>::max();
-    
-    LL n, m, x, y, a, b;
-    LD s;
-    
-    bool is_number( LD x ) {
-        return fabs(ceil(x) - floor(x)) < 1e-9;
+  class Solution: public SolutionBase {
+  public:
+  protected:
+    virtual bool action() {
+      init();
+      if ( ! input() )
+        return false;
+      solver.solve();
+      output();
+      return true;
     }
     
-    LD get_offset() {
-        LD scale = s + 0.5;
-        LD da = a, db = b;
-        LD sa = da * scale, sb = db * scale;
-        if ( is_number(sa) && is_number(sb) && sa <= n && sb <= m )
-            return 0.5;
-        return 0.0;
+    void init() {
+      result = Rect(II(INF, INF), II(INF, INF));
     }
     
-    LD sq( LD x ) {
-        return x * x;
+    bool input() {
+      return cin >> n >> m >> x >> y >> a >> b;
     }
     
-    LD get_dist( LD x1, LD y1, LD x2, LD y2 ) {
-        return sq(x2 - x1) + sq(y2 - y1);
+    void output() {
+      cout << result << endl;
     }
     
-    Result solve() {
-        LL g = math::gcd(a, b);
-        a /= g;
-        b /= g;
-        for ( s = 1; s <= max(n, m); ++ s ) {
-            LL ns = s + 1;
-            if ( a * ns > n || b * ns > m )
-                break;
-        }
-        Result res(INF, Rect(Pos(INF, INF), Pos(INF, INF)));
-        LD ds = s;
-        LD scale = ds + get_offset();
-        LL na = a * scale, nb = b * scale;
-        for ( int i = -2500; i <= 2500; ++ i ) {
-            for ( int j = -2500; j <= 2500; ++ j ) {
-                LL x1 = x - i, y1 = y - j;
-                LL x2 = x1 + na, y2 = y1 + nb;
-                if ( x1 < 0 || x1 > n || y1 < 0 || y1 > m )
-                    continue;
-                if ( x2 < 0 || x2 > n || y2 < 0 || y2 > m )
-                    continue;
-                if ( ! ( x1 <= x && x <= x2 ) || ! ( y1 <= y && y <= y2 ) )
-                    continue;
-                Result tmp(get_dist(x, y, (LD)(x1 + x2) / 2.0, (LD)(y1 + y2) / 2.0), Rect(Pos(x1, y1), Pos(x1 + na, y1 + nb)));
-                res = min(res, tmp);
-            }
-        }
-        return res;
-    }
+  private:
+    Solver solver;
     
-    class Solution: public ISolution {
-    public:
-        
-        bool input() {
-            return cin >> n >> m >> x >> y >> a >> b;
-        }
-        
-        void output( Result result ) {
-            cout << result.second.first.first << " " << result.second.first.second << " ";
-            cout << result.second.second.first << " " << result.second.second.second << endl;
-        }
-        
-        int run() {
-            while ( init(), input() ) {
-                output(solve());
-            }
-            return 0;
-        }
-        
-    };
+  };
 }
 
 // @snippet<sh19910711/contest:main.cpp>
 int main() {
-    return solution::Solution().run();
+  return solution::Solution().run();
 }
+
 
 
