@@ -20,146 +20,215 @@
 #include <cstring>
 #include <cmath>
 
-// @snippet<sh19910711/contest:solution/typedef.cpp>
-namespace solution {
-    typedef std::istringstream ISS;
-    typedef std::ostringstream OSS;
-    typedef std::vector<std::string> VS;
-    typedef long long LL;
-    typedef int INT;
-    typedef std::vector<INT> VI;
-    typedef std::vector<VI> VVI;
-    typedef std::pair<INT,INT> II;
-    typedef std::vector<II> VII;
-}
-
 // @snippet<sh19910711/contest:solution/interface.cpp>
 namespace solution {
-    class ISolution {
-    public:
-        virtual void init() {};
-        virtual bool input() { return false; };
-        virtual void output() {};
-        virtual int run() = 0;
-    };
+  class SolutionInterface {
+  public:
+    virtual int run() = 0;
+    
+  protected:
+    virtual void pre_calc() {}
+    virtual bool action() = 0;
+    virtual void init() {};
+    virtual bool input() { return false; };
+    virtual void output() {};
+    
+    SolutionInterface() {}
+    
+  private:
+    
+  };
+}
+
+// @snippet<sh19910711/contest:solution/solution-base.cpp>
+namespace solution {
+  class SolutionBase: public SolutionInterface {
+  public:
+    virtual int run() {
+      pre_calc();
+      while ( action() );
+      return 0;
+    }
+    
+  };
+}
+
+// @snippet<sh19910711/contest:solution/typedef.cpp>
+namespace solution {
+  typedef std::istringstream ISS;
+  typedef std::ostringstream OSS;
+  typedef std::vector<std::string> VS;
+  typedef long long LL;
+  typedef int INT;
+  typedef std::vector<INT> VI;
+  typedef std::vector<VI> VVI;
+  typedef std::pair<INT,INT> II;
+  typedef std::vector<II> VII;
+}
+
+// @snippet<sh19910711/contest:solution/namespace-area.cpp>
+namespace solution {
+  // namespaces, types
+  using namespace std;
+  typedef set<II> Set;
+}
+
+// @snippet<sh19910711/contest:solution/variables-area.cpp>
+namespace solution {
+  // constant vars
+  const int SIZE = 1000000 + 11;
+  const LL MOD = 1000000007LL;
+
+  // storages
+  int n, m, k;
+  int from[SIZE];
+  int to[SIZE];
+  int F[SIZE];
+  int FC;
+  Set E;
+
+  LL P[SIZE];
+
+  LL result;
+
+}
+
+// @snippet<sh19910711/contest:solution/solver-area.cpp>
+namespace solution {
+  class Solver {
+  public:
+    void solve() {
+      normalize();
+      for ( int i = 0; i < m; ++ i )
+        E.insert(II(from[i], to[i]));
+      result = calc_ways();
+    }
+
+    void normalize() {
+      for ( int i = 0; i < m; ++ i ) {
+        from[i] --;
+        to[i] --;
+      }
+    }
+
+    bool has_skipped( int x ) {
+      return E.count(II(x, x + k + 1));
+    }
+
+    LL calc_ways() {
+      if ( is_invalid_case() )
+        return 0;
+
+      LL total = get_total();
+      return total;
+    }
+
+    LL get_total() {
+
+      FC = 0;
+      for ( int i = 0; i < m; ++ i ) {
+        if ( to[i] - from[i] == k + 1 ) {
+          F[FC ++] = from[i];
+        }
+      }
+      sort(F, F + FC);
+
+      LL res = 0;
+      for ( int i = 0; i + k + 1 < n; ++ i ) {
+        if ( has_skipped(i) || has_skipped(i + k + 1) )
+          continue;
+        int left = i;
+        int right = min(n - k - 1 - 1, i + k);
+        int len = max(0, right - left);
+        int lb = std::lower_bound(F, F + FC, left + 1) - F;
+        int ub = std::upper_bound(F, F + FC, right) - F;
+        len -= ub - lb;
+        if ( len < 0 )
+          continue;
+        if ( len == 0 && has_skipped(i) )
+          continue;
+        res = ( res + P[len] ) % MOD;
+      }
+
+      bool ok = true;
+      LL con = 0;
+      for ( int i = 0; i + 1 < n; ++ i ) {
+        if ( ! E.count(II(i, i + 1)) ) {
+          ok = false;
+          con = 1;
+        }
+      }
+      if ( ok )
+        con ++;
+
+      return ( res + con ) % MOD;
+    }
+
+    bool is_invalid_case() {
+
+      for ( int i = 0; i < m; ++ i ) {
+        int dist = to[i] - from[i];
+        if ( dist != 1 && dist != k + 1 )
+          return true;
+      }
+
+      for ( int i = 0; i < m; ++ i ) {
+        if ( has_skipped(i) && has_skipped(i + k + 1) )
+          return true;
+      }
+
+      return false;
+    }
+    
+  private:
+    
+  };
 }
 
 // @snippet<sh19910711/contest:solution/solution.cpp>
 namespace solution {
-    using namespace std;
-
-    typedef set<int> Set;
-
-    const int V_SIZE = 1000000 + 11;
-    const int E_SIZE = 100000 + 11;
-    const LL MOD = 1000000000 + 7;
-
-    const int OFF = 0;
-    const int ON = 1;
-
-    int n;
-    int m;
-    int k;
-    set <int> G[V_SIZE];
-    int EF[E_SIZE];
-    int ET[E_SIZE];
-    LL D[V_SIZE][2];
-
-    void init_graph() {
-        for ( int i = 0; i < m; ++ i )
-            G[EF[i]].insert(ET[i]);
+  class Solution: public SolutionBase {
+  public:
+  protected:
+    virtual bool action() {
+      init();
+      if ( ! input() )
+        return false;
+      solver.solve();
+      output();
+      return true;
     }
 
-    bool is_invalid() {
-        bool jump[n];
-        fill(jump, jump + n, false);
-        for ( int i = 0; i < n; ++ i ) {
-            if ( G[i].size() == 1 ) {
-                if ( ! G[i].count(i + 1) )
-                    jump[i] = true;
-            } else if ( G[i].size() > 1 ) {
-                jump[i] = true;
-            }
-        }
+    void pre_calc() {
+      P[0] = 1;
+      for ( int i = 1; i < SIZE; ++ i )
+        P[i] = ( P[i - 1] * 2LL ) % MOD;
+    }
 
-        for ( int i = 0; i < n; ++ i ) {
-            if ( ! jump[i] )
-                continue;
-            for ( Set::iterator it_i = G[i].begin(); it_i != G[i].end(); ++ it_i ) {
-                int j = *it_i;
-                if ( j <= i + 1 )
-                    continue;
-                if ( jump[j] )
-                    return true;
-            }
-        }
+    void init() {
+      E.clear();
+    }
 
-        for ( int i = 0; i < n; ++ i ) {
-            for ( Set::iterator it_i = G[i].begin(); it_i != G[i].end(); ++ it_i ) {
-                int j = *it_i;
-                if ( i >= j )
-                    return true;
-            }
-        }
-
+    bool input() {
+      if ( ! ( cin >> n >> m >> k ) )
         return false;
+      for ( int i = 0; i < m; ++ i )
+        cin >> from[i] >> to[i];
+      return true;
+    }
+
+    void output() {
+      cout << result << endl;
     }
     
-    LL solve() {
-        init_graph();
-
-        if ( is_invalid() )
-            return 0;
-        
-        D[0][OFF] = 1;
-        for ( int i = 0; i < n; ++ i ) {
-            D[i + 1][OFF] = ( D[i][OFF] + D[i][ON] ) % MOD;
-            if ( ! G[i].count(i + 1) )
-                D[i + 1][OFF] = ( D[i + 1][OFF] + 1 ) % MOD;
-            if ( i + k + 1 < n && ! G[i].count(i + k + 1) )
-                D[i + k + 1][ON] = ( D[i + k + 1][ON] + D[i][OFF] ) % MOD;
-        }
-        return ( D[n - 1][OFF] - 1 + MOD ) % MOD;
-    }
-
-    class Solution: public ISolution {
-    public:
-
-        void init() {
-            for ( int i = 0; i < V_SIZE; ++ i )
-                for ( int j = 0; j < 2; ++ j )
-                    D[i][j] = 0;
-            for ( int i = 0; i < V_SIZE; ++ i )
-                G[i].clear();
-        }
-        
-        bool input() {
-            if ( ! ( cin >> n >> m >> k ) )
-                return false;
-            for ( int i = 0; i < m; ++ i ) {
-                cin >> EF[i] >> ET[i];
-                EF[i] --;
-                ET[i] --;
-            }
-            return true;
-        }
-
-        void output( LL result ) {
-            cout << result << endl;
-        }
-        
-        int run() {
-            while ( init(), input() ) {
-                output(solve());
-            }
-            return 0;
-        }
-        
-    };
+  private:
+    Solver solver;
+    
+  };
 }
 
 // @snippet<sh19910711/contest:main.cpp>
 int main() {
-    return solution::Solution().run();
+  return solution::Solution().run();
 }
 
