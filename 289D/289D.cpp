@@ -66,22 +66,31 @@ namespace solution {
   typedef std::vector<II> VII;
 }
 
+// @snippet<sh19910711/contest:math/mod_pow.cpp>
+namespace math {
+  template<class T> T mod_pow( T x, T n, T mod ) {
+    if ( n == 0 ) return 1;
+    T res = mod_pow( x * x % mod, n / 2, mod );
+    if ( n & 1 ) res = res * x % mod;
+    return res;
+  }
+}
+
 // @snippet<sh19910711/contest:solution/namespace-area.cpp>
 namespace solution {
   // namespaces, types
   using namespace std;
-  
 }
 
 // @snippet<sh19910711/contest:solution/variables-area.cpp>
 namespace solution {
   // constant vars
-  const int MOD = 1000000007;
+  const LL MOD = 1000000007;
   const int SIZE = 1000 + 11;
   // storages
   int n, k;
-  int result;
-
+  LL result;
+  
   int P[SIZE];
   bool used[SIZE];
 }
@@ -92,52 +101,46 @@ namespace solution {
   public:
     void solve() {
       result = 0;
-
-      rec(0);
+      
+      LL ret1 = rec(0) % MOD;
+      LL ret2 = math::mod_pow((LL)n - k, (LL)n - k, MOD);
+      result = ( ret1 * ret2 ) % MOD;
     }
-
-    void rec( int x ) {
-      if ( x >= n ) {
-        if ( check_valid() )
-          print_p();
-        return;
+    
+    LL rec( int x ) {
+      if ( x >= k ) {
+        return check_valid() ? 1 : 0;
       }
-
-      for ( int i = 0; i < n; ++ i ) {
+      
+      LL res = 0;
+      for ( int i = 0; i < k; ++ i ) {
         P[x] = i;
-        rec(x + 1);
+        res += rec(x + 1);
       }
+      return res;
     }
-
+    
     bool check_valid() {
-      for ( int i = 0; i < n; ++ i ) {
-        fill(used, used + n, false);
+      for ( int i = 0; i < k; ++ i ) {
+        fill(used, used + k, false);
         if ( i < k ) {
           if ( ! can_reach_0(P[i]) ) {
             return false;
           }
-        } else {
-          if ( can_reach_0(P[i]) ) {
-            return false;
-          }
-        }
+        } 
       }
       return true;
     }
-
+    
     bool can_reach_0( int x ) {
       if ( x == 0 )
         return true;
+      if ( x >= k )
+        return false;
       if ( used[x] )
         return false;
       used[x] = true;
       return can_reach_0(P[x]);
-    }
-
-    void print_p() {
-      for ( int i = 0; i < n; ++ i )
-        cout << P[i] << ", ";
-      cout << endl;
     }
     
   private:
@@ -158,11 +161,11 @@ namespace solution {
       output();
       return true;
     }
-
+    
     bool input() {
       return cin >> n >> k;
     }
-
+    
     void output() {
       cout << result << endl;
     }
@@ -177,4 +180,5 @@ namespace solution {
 int main() {
   return solution::Solution().run();
 }
+
 
