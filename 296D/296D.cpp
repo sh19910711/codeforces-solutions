@@ -95,7 +95,6 @@ namespace solution {
   public:
     void solve() {
       normalize();
-      rearrange_a();
       calc_sum();
     }
 
@@ -110,13 +109,13 @@ namespace solution {
         int num_vertices = xi + 1;
         for ( int i = 0; i < n; ++ i ) {
           for ( int j = 0; j < n; ++ j ) {
-            min_dist[i][j] = min(min_dist[i][j], min_dist[i][xi] + min_dist[xi][j]);
+            min_dist[i][j] = min(min_dist[i][j], min_dist[i][X[xi]] + min_dist[X[xi]][j]);
           }
         }
         LL sum = 0;
         for ( int i = 0; i < num_vertices; ++ i )
           for ( int j = 0; j < num_vertices; ++ j )
-            sum += min_dist[i][j];
+            sum += min_dist[X[i]][X[j]];
         B[xi] = sum;
       }
 
@@ -127,30 +126,6 @@ namespace solution {
       for ( int i = 0; i < n; ++ i )
         X[i] --;
       reverse(X, X + n);
-    }
-
-    void rearrange_a() {
-      for ( int i = 0; i < n; ++ i ) {
-        int x = X[i];
-        for ( int j = 0; j < n; ++ j ) {
-          C[j][i] = A[j][x];
-          C[j][x] = A[j][i];
-        }
-      }
-      for ( int i = 0; i < n; ++ i )
-        for ( int j = 0; j < n; ++ j )
-          A[i][j] = C[i][j];
-      
-      for ( int i = 0; i < n; ++ i ) {
-        int x = X[i];
-        for ( int j = 0; j < n; ++ j ) {
-          C[i][j] = A[x][j];
-          C[x][j] = A[i][j];
-        }
-      }
-      for ( int i = 0; i < n; ++ i )
-        for ( int j = 0; j < n; ++ j )
-          A[i][j] = C[i][j];
     }
     
   private:
