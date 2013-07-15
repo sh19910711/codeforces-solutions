@@ -87,12 +87,27 @@ namespace solution {
 namespace solution {
   // constant vars
   const int SIZE = 20;
+  const LL MOD = 1000000007LL;
   // storages
   int n;
   LL result;
-  
-  II C[SIZE][SIZE];
-  int CC[SIZE];
+  LL A[SIZE] = {
+    1,
+    0,
+    3,
+    0,
+    15,
+    0,
+    133,
+    0,
+    2025,
+    0,
+    37851,
+    0,
+    1030367,
+    0,
+    36362925
+  };
 }
 
 // @snippet<sh19910711/contest:solution/solver-area.cpp>
@@ -100,43 +115,13 @@ namespace solution {
   class Solver {
   public:
     void solve() {
-      for ( int a = 1; a <= n; ++ a ) {
-        for ( int b = 1; b <= n; ++ b ) {
-          int value = (a + b - 2) % n + 1;
-          C[value][CC[value] ++] = II(a, b);
-        }
-      }
-      result = rec(0, 0, 0, 0) / fact(n);
+      result = ( mod_fact(n) * A[n - 1] ) % MOD;
     }
 
-    int fact( int k ) {
-      int res = 1;
+    LL mod_fact( int k ) {
+      LL res = 1;
       for ( int i = 1; i <= k; ++ i )
-        res *= i;
-      return res;
-    }
-
-    int rec( int k, int asum, int bsum, int csum ) {
-      if ( k >= n ) {
-        return 1;
-      }
-      int res = 0;
-      for ( int c = 0; c < n; ++ c ) {
-        int bc = 1 << c;
-        if ( csum & bc )
-          continue;
-        for ( int cc = 0; cc < CC[c + 1]; ++ cc ) {
-          int a = C[c + 1][cc].first - 1;
-          int ba = 1 << a;
-          int b = C[c + 1][cc].second - 1;
-          int bb = 1 << b;
-          if ( asum & ba )
-            continue;
-          if ( bsum & bb )
-            continue;
-          res += rec(k + 1, asum | ba, bsum | bb, csum | bc);
-        }
-      }
+        res = ( res * i ) % MOD;
       return res;
     }
     
@@ -157,11 +142,6 @@ namespace solution {
       solver.solve();
       output();
       return true;
-    }
-
-    void init() {
-      for ( int i = 0; i < SIZE; ++ i )
-        CC[i] = 0;
     }
     
     bool input() {
