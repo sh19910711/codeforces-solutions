@@ -19,94 +19,168 @@
 #include <cstdlib>
 #include <cstring>
 #include <cmath>
+
 // @snippet<sh19910711/contest:solution/interface.cpp>
 namespace solution {
-    class ISolution {
-    public:
-        virtual void init() {};
-        virtual bool input() { return false; };
-        virtual void output() {};
-        virtual int run() = 0;
-    };
+  class SolutionInterface {
+  public:
+    virtual int run() = 0;
+    
+  protected:
+    virtual void pre_calc() {}
+    virtual bool action() = 0;
+    virtual void init() {};
+    virtual bool input() { return false; };
+    virtual void output() {};
+    
+    SolutionInterface() {}
+    
+  private:
+    
+  };
 }
+
+// @snippet<sh19910711/contest:solution/solution-base.cpp>
+namespace solution {
+  class SolutionBase: public SolutionInterface {
+  public:
+    virtual int run() {
+      pre_calc();
+      while ( action() );
+      return 0;
+    }
+    
+  };
+}
+
+// @snippet<sh19910711/contest:io/pair.cpp>
+namespace io {
+  template <class A, class B> std::ostream& operator<<( std::ostream& os, const std::pair<A,B>& p ) {
+    return os << "(" << p.first << "," << p.second << ")";
+  }
+  template <class A, class B> std::istream& operator>>( std::istream& is, std::pair<A,B>& p ) {
+    return is >> p.first >> p.second;
+  }
+}
+
 // @snippet<sh19910711/contest:solution/typedef.cpp>
 namespace solution {
-    typedef std::istringstream ISS;
-    typedef std::ostringstream OSS;
-    typedef std::vector<std::string> VS;
-    typedef long long LL;
-    typedef int INT;
-    typedef std::vector<INT> VI;
-    typedef std::vector<VI> VVI;
-    typedef std::pair<INT,INT> II;
-    typedef std::vector<II> VII;
+  typedef std::istringstream ISS;
+  typedef std::ostringstream OSS;
+  typedef std::vector<std::string> VS;
+  typedef long long LL;
+  typedef int INT;
+  typedef std::vector<INT> VI;
+  typedef std::vector<VI> VVI;
+  typedef std::pair<INT,INT> II;
+  typedef std::vector<II> VII;
 }
+
+// @snippet<sh19910711/contest:solution/namespace-area.cpp>
+namespace solution {
+  // namespaces, types
+  using namespace std;
+  using namespace io;
+}
+
+// @snippet<sh19910711/contest:solution/variables-area.cpp>
+namespace solution {
+  // constant vars
+  const int SIZE = 20;
+  // storages
+  int n;
+  LL result;
+  
+  II C[SIZE][SIZE];
+  int CC[SIZE];
+}
+
+// @snippet<sh19910711/contest:solution/solver-area.cpp>
+namespace solution {
+  class Solver {
+  public:
+    void solve() {
+      for ( int a = 1; a <= n; ++ a ) {
+        for ( int b = 1; b <= n; ++ b ) {
+          int value = (a + b - 2) % n + 1;
+          C[value][CC[value] ++] = II(a, b);
+        }
+      }
+      result = rec(0, 0, 0, 0) / fact(n);
+    }
+
+    int fact( int k ) {
+      int res = 1;
+      for ( int i = 1; i <= k; ++ i )
+        res *= i;
+      return res;
+    }
+
+    int rec( int k, int asum, int bsum, int csum ) {
+      if ( k >= n ) {
+        return 1;
+      }
+      int res = 0;
+      for ( int c = 0; c < n; ++ c ) {
+        int bc = 1 << c;
+        if ( csum & bc )
+          continue;
+        for ( int cc = 0; cc < CC[c + 1]; ++ cc ) {
+          int a = C[c + 1][cc].first - 1;
+          int ba = 1 << a;
+          int b = C[c + 1][cc].second - 1;
+          int bb = 1 << b;
+          if ( asum & ba )
+            continue;
+          if ( bsum & bb )
+            continue;
+          res += rec(k + 1, asum | ba, bsum | bb, csum | bc);
+        }
+      }
+      return res;
+    }
+    
+  private:
+    
+  };
+}
+
 // @snippet<sh19910711/contest:solution/solution.cpp>
 namespace solution {
-    using namespace std;
-    
-    const LL MOD = 1000000000 + 7;
-    const int SIZE = 16;
-    int n;
-    map<int,LL> dp[1<<SIZE];
+  class Solution: public SolutionBase {
+  public:
+  protected:
+    virtual bool action() {
+      init();
+      if ( ! input() )
+        return false;
+      solver.solve();
+      output();
+      return true;
+    }
 
-    class Solution: public ISolution {
-    public:
-        bool input() {
-            return cin >> n;
-        }
-        LL calc() {
-            int m = 1 << n;
-            for ( int i = 0; i <= n; ++ i )
-                for ( int j = 0; j < m; ++ j )
-                    dp[i][j] = 0;
-            dp[0][0] = 1;
-            for ( int i = m-1; i >= 0; -- i ) {
-                for ( int s = m-1; s >= 0; -- s ) {
-                    LL prev = dp[i][s];
-                    if ( prev == 0 )
-                        continue;
-                    for ( int k = 0; k < n; ++ k ) {
-                        int c = ( i + k ) % n;
-                        int b = 1 << c;
-                        if ( ( i & b ) == 0 && ( s & b ) == 0 ) {
-                            int ni = i | b;
-                            int ns = s | b;
-                            // cout << "(" << i << ", " << s << "), (" << ni << ", " << ns << ")" << endl;
-                            dp[ni][ns] = ( dp[ni][ns] + prev ) % MOD;
-                        }
-                    }
-                }
-            }
-            LL whole = 1;
-            for ( int i = n; i > 1; -- i ) {
-                whole = ( whole * i ) % MOD;
-            }
-            cout << "whole = " << whole << " / " << m-1 << ": " << dp[m-1][m-1] << endl;
-            return ( whole - dp[m-1][m-1] + MOD ) % MOD;
-        }
-        LL solve() {
-            if ( n % 2 == 0 )
-                return 0;
-            LL res = 1;
-            for ( int i = n; i > 1; -- i ) {
-                res = ( res * i ) % MOD;
-            }
-            return ( res * calc() ) % MOD;
-        }
-        void output( LL result ) {
-            cout << result << endl;
-        }
-        int run() {
-            while ( init(), input() ) {
-                output(solve());
-            }
-            return 0;
-        }
-    };
+    void init() {
+      for ( int i = 0; i < SIZE; ++ i )
+        CC[i] = 0;
+    }
+    
+    bool input() {
+      return cin >> n;
+    }
+    
+    void output() {
+      cout << result << endl;
+    }
+    
+  private:
+    Solver solver;
+    
+  };
 }
+
 // @snippet<sh19910711/contest:main.cpp>
 int main() {
-    return solution::Solution().run();
+  return solution::Solution().run();
 }
+
 

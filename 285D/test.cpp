@@ -1,52 +1,50 @@
 #include <iostream>
-#include <algorithm>
 using namespace std;
 
-int bruteforce( int n ) {
-    int res = 0;
-    int A[n];
-    for ( int i = 0; i < n; ++ i )
-        A[i] = i + 1;
-    int B[n];
-    for ( int i = 0; i < n; ++ i )
-        B[i] = i + 1;
-    sort( A, A+n );
-    do {
-        sort( B, B+n );
-        do {
-            int C[n];
-            for ( int i = 0; i < n; ++ i ) {
-                C[i] = ( A[i] - 1 + B[i] - 1 ) % n + 1;
-            }
-            sort( C, C+n );
-            bool ok = true;
-            for ( int i = 0; i < n; ++ i ) {
-                if ( C[i] != i+1 )
-                    ok = false;
-            }
-            if ( ok ) {
-                res ++;
-                for ( int i = 0; i < n; ++ i )
-                    C[i] = ( A[i] - 1 + B[i] - 1 ) % n + 1;
-                for ( int i = 0; i < n; ++ i )
-                    cout << A[i] << ", ";
-                cout << endl;
-                for ( int i = 0; i < n; ++ i )
-                    cout << B[i] << ", ";
-                cout << endl;
-                for ( int i = 0; i < n; ++ i )
-                    cout << C[i] << ", ";
-                cout << endl;
-                cout << " -- " << endl;
-            }
-        } while ( next_permutation( B, B+n ) );
-    } while ( next_permutation( A, A+n ) );
-    return res;
+const int SIZE = 100;
+int n;
+int cnt;
+int A[SIZE];
+int B[SIZE];
+int C[SIZE];
+
+bool is_permutation_sum( int sum ) {
+  return sum == ( 1 << n ) - 1;
 }
+
+void find( int k, int asum, int bsum ) {
+  if ( k >= n ) {
+    if ( is_permutation_sum(asum) && is_permutation_sum(bsum) ) {
+      int csum = 0;
+      for ( int i = 0; i < n; ++ i ) {
+        C[i] = ( A[i] + B[i] - 2 ) % n + 1;
+        csum |= 1 << ( C[i] - 1 );
+      }
+      if ( is_permutation_sum(csum) ) {
+        cnt ++;
+      }
+    }
+
+    return;
+  }
+
+  for ( int a = 1; a <= n; ++ a ) {
+    for ( int b = 1; b <= n; ++ b ) {
+      A[k] = a;
+      B[k] = b;
+      int ba = 1 << ( a - 1 );
+      int bb = 1 << ( b - 1 );
+      find(k + 1, asum | ba, bsum | bb );
+    }
+  }
+}
+
 int main() {
-    bruteforce(5);
-    return 0;
-    for ( int i = 1; i <= 7; i += 1 )
-        cout << i << ": " << bruteforce(i) << endl;
-    return 0;
+  for ( n = 3; n <= 7; n += 2 ) {
+    cnt = 0;
+    find(0, 0, 0);
+    cout << n << ": " << cnt << endl;
+  }
+  return 0;
 }
+
