@@ -22,97 +22,166 @@
 
 // @snippet<sh19910711/contest:solution/interface.cpp>
 namespace solution {
-    class ISolution {
-    public:
-        virtual void init() {};
-        virtual bool input() { return false; };
-        virtual void output() {};
-        virtual int run() = 0;
-    };
+  class SolutionInterface {
+  public:
+    virtual int run() = 0;
+    
+  protected:
+    virtual void pre_calc() {}
+    virtual bool action() = 0;
+    virtual void init() {};
+    virtual bool input() { return false; };
+    virtual void output() {};
+    
+    SolutionInterface() {}
+    
+  private:
+    
+  };
+}
+
+// @snippet<sh19910711/contest:solution/solution-base.cpp>
+namespace solution {
+  class SolutionBase: public SolutionInterface {
+  public:
+    virtual int run() {
+      pre_calc();
+      while ( action() );
+      return 0;
+    }
+    
+  };
 }
 
 // @snippet<sh19910711/contest:solution/typedef.cpp>
 namespace solution {
-    typedef std::istringstream ISS;
-    typedef std::ostringstream OSS;
-    typedef std::vector<std::string> VS;
-    typedef long long LL;
-    typedef int INT;
-    typedef std::vector<INT> VI;
-    typedef std::vector<VI> VVI;
-    typedef std::pair<INT,INT> II;
-    typedef std::vector<II> VII;
+  typedef std::istringstream ISS;
+  typedef std::ostringstream OSS;
+  typedef std::vector<std::string> VS;
+  typedef long long LL;
+  typedef int INT;
+  typedef std::vector<INT> VI;
+  typedef std::vector<VI> VVI;
+  typedef std::pair<INT,INT> II;
+  typedef std::vector<II> VII;
+}
+
+// @snippet<sh19910711/contest:solution/namespace-area.cpp>
+namespace solution {
+  // namespaces, types
+  using namespace std;
+  
+}
+
+// @snippet<sh19910711/contest:solution/variables-area.cpp>
+namespace solution {
+  // constant vars
+  const int SIZE = 2 * 100000 + 11;
+  const int NONE = -1;
+  const LL MEMO_NONE = std::numeric_limits<LL>::min();
+  // storages
+  int n;
+  int A[SIZE];
+  
+  LL B[SIZE];
+  bool visited[SIZE][2];
+  LL memo[SIZE][2];
+}
+
+// @snippet<sh19910711/contest:solution/solver-area.cpp>
+namespace solution {
+  class Solver {
+  public:
+    void solve() {
+      for ( int i = 1; i <= n - 1; ++ i ) {
+        memo[1][0] = MEMO_NONE;
+        visited[1][0] = false;
+        A[1] = i;
+        LL ret = rec(1, 0);
+        if ( ret == NONE ) {
+          B[i - 1] = NONE;
+        } else {
+          B[i - 1] = ret;
+        }
+      }
+    }
+
+    LL rec( int x, int first ) {
+      if ( x <= 0 || x > n )
+        return 0;
+
+      if ( memo[x][first] != MEMO_NONE )
+        return memo[x][first];
+
+      if ( visited[x][first] )
+        return memo[x][first] = NONE;
+      visited[x][first] = true;
+
+      if ( first ) {
+        LL ret = rec(x - A[x], 0);
+        return memo[x][first] = ( ret == NONE ? NONE : ret + A[x] );
+      } else {
+        LL ret = rec(x + A[x], 1);
+        return memo[x][first] = ( ret == NONE ? NONE : ret + A[x] );
+      }
+
+      return NONE;
+    }
+    
+  private:
+    
+  };
 }
 
 // @snippet<sh19910711/contest:solution/solution.cpp>
 namespace solution {
-    using namespace std;
-
-    typedef pair<LL, LL> State;
-    const int SIZE = 200011;
-    int n;
-    int A[SIZE];
-
-    map <State, LL> memo;
-    set <State> visited;
-
-    LL rec( LL x, LL px ) {
-        if ( x <= 0 || x > n )
-            return 0;
-        State s( x, px );
-        px = x;
-        if ( memo.count(s) )
-            return memo[s];
-        LL a1 = A[x];
-        x += A[x];
-        if ( x <= 0 || x > n )
-            return a1;
-        if ( visited.count(s) )
-            return -1;
-        visited.insert(s);
-        LL a2 = A[x];
-        x -= A[x];
-        LL ret = rec( x, px );
-        if ( ret == -1 )
-            return -1;
-        return memo[s] = a1 + a2 + ret;
+  class Solution: public SolutionBase {
+  public:
+  protected:
+    virtual bool action() {
+      init();
+      if ( ! input() )
+        return false;
+      solver.solve();
+      output();
+      return true;
+    }
+    
+    void init() {
+      for ( int i = 0; i < SIZE; ++ i )
+        for ( int j = 0; j < 2; ++ j )
+          visited[i][j] = false;
+      for ( int i = 0; i < SIZE; ++ i )
+        for ( int j = 0; j < 2; ++ j )
+          memo[i][j] = MEMO_NONE;
     }
 
-    class Solution: public ISolution {
-    public:
-        void init() {
-            memo.clear();
-            visited.clear();
+    bool input() {
+      if ( ! ( cin >> n ) )
+        return false;
+      for ( int i = 2; i <= n; ++ i )
+        cin >> A[i];
+      return true;
+    }
+
+    void output() {
+      for ( int i = 0; i < n - 1; ++ i ) {
+        if ( B[i] == NONE ) {
+          cout << -1 << endl;
+        } else {
+          cout << B[i] << endl;
         }
-        bool input() {
-            if ( ! ( cin >> n ) )
-                return false;
-            for ( int i = 2; i <= n; ++ i ) {
-                cin >> A[i];
-            }
-            return true;
-        }
-        void solve() {
-            for ( int i = 1; i <= n-1; ++ i ) {
-                visited.clear();
-                A[1] = i;
-                cout << rec( 1, -i ) << endl;
-            }
-        }
-        int run() {
-            while ( init(), input() ) {
-                solve();
-                output();
-            }
-            return 0;
-        }
-    };
+      }
+    }
+    
+  private:
+    Solver solver;
+    
+  };
 }
 
 // @snippet<sh19910711/contest:main.cpp>
-
 int main() {
-    return solution::Solution().run();
+  return solution::Solution().run();
 }
-
 
