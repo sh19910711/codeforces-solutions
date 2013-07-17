@@ -40,34 +40,36 @@ namespace solution {
   };
 }
 
+// @snippet<sh19910711/contest:tree/binary_indexed_tree.cpp>
 namespace tree {
-  class BinaryIndexedTree {
+  template <class T> class BinaryIndexedTree {
   public:
     int n;
-    std::vector<int> data;
-
+    std::vector<T> data;
+    
     BinaryIndexedTree() {}
-
-    BinaryIndexedTree( int n ): n(n) {
-      data = std::vector<int>(n + 1, 0);
+    BinaryIndexedTree( const int& n ): n(n) {
+      data = std::vector<T>(n + 1, 0);
     }
-
-    int sum( int i ) {
-      i += 1;
-      int s = 0;
-      while ( i > 0 ) {
-        s += data[i];
-        i -= i & -i;
-      }
-      return s;
+    
+    T sum( int i ) {
+      i ++;
+      int res = 0;
+      while ( i > 0 ) { res += data[i]; i -= i & -i; }
+      return res;
     }
-
-    void add( int i, int x ) {
-      i += 1;
-      while ( i <= n ) {
-        data[i] += x;
-        i += i & -i;
-      }
+    
+    void add( int i, const T& x ) {
+      i ++;
+      while ( i <= n ) { data[i] += x; i += i & -i; }
+    }
+    
+    T get( const int& x ) {
+      return sum(x) - sum(x - 1);
+    }
+    
+    void set( const int& x, const T& new_value ) {
+      add(x, new_value - get(x));
     }
   };
 }
@@ -102,13 +104,13 @@ namespace solution {
 namespace solution {
   // namespaces, types
   using namespace std;
-  
+  typedef tree::BinaryIndexedTree<int> BIT;
 }
 
 // @snippet<sh19910711/contest:solution/variables-area.cpp>
 namespace solution {
   // constant vars
-  const int SIZE = 3 * 100000 + 11;
+  const int SIZE = 3 * 100000 + 111;
   const int NONE = -1;
   // storages
   int n;
@@ -117,10 +119,10 @@ namespace solution {
   int P[SIZE];
   int X[SIZE];
   int Y[SIZE];
-
+  
   int B[SIZE];
-  tree::BinaryIndexedTree bit;
-
+  BIT bit;
+  
   int results[SIZE];
 }
 
@@ -130,29 +132,28 @@ namespace solution {
   public:
     void solve() {
       B[0] = std::numeric_limits<int>::min();
-      for ( int i = 1; i <= 50; ++ i )
-        B[n + i] = std::numeric_limits<int>::max();
+      B[n + 1] = std::numeric_limits<int>::max();
       for ( int i = 1; i <= n; ++ i )
         B[A[i]] = i;
-
+      
       for ( int i = 1; i <= n; ++ i )
         if ( B[i] > B[i + 1] )
           set_value(i, 1);
-
+      
       for ( int i = 0; i < q; ++ i )
         results[i] = query(P[i], X[i], Y[i]);
     }
-
+    
     int get_value( int x ) {
       return bit.sum(x) - bit.sum(x - 1);
     }
-
+    
     void set_value( int x, int new_value ) {
       int value = get_value(x);
       bit.add(x, -value);
       bit.add(x, new_value);
     }
-
+    
     int query( int p, int x, int y ) {
       if ( p == 1 ) {
         return query_a(x, y);
@@ -161,27 +162,29 @@ namespace solution {
       }
       return NONE;
     }
-
+    
     int query_a( int x, int y ) {
-      return bit.sum(y) - bit.sum(x - 1) + 1;
+      return bit.sum(y - 1) - bit.sum(x - 1) + 1;
     }
-
+    
     int query_b( int x, int y ) {
       int value_x = A[x];
       int value_y = A[y];
       B[value_x] = y;
       B[value_y] = x;
       swap(A[x], A[y]);
-
+      
       for ( int i = -1; i <= 1; ++ i ) {
         int n_value_x = value_x + i;
         int n_value_y = value_y + i;
-        if ( n_value_x > 0 )
+        if ( n_value_x > 0 && n_value_x + 1 <= n ) {
           set_value(n_value_x, B[n_value_x] > B[n_value_x + 1] ? 1 : 0);
-        if ( n_value_y > 0 )
+        }
+        if ( n_value_y > 0 && n_value_y + 1 <= n ) {
           set_value(n_value_y, B[n_value_y] > B[n_value_y + 1] ? 1 : 0);
+        }
       }
-
+      
       return NONE;
     }
     
@@ -203,11 +206,11 @@ namespace solution {
       output();
       return true;
     }
-
+    
     void init() {
-      bit = tree::BinaryIndexedTree(SIZE);
+      bit = BIT(SIZE);
     }
-
+    
     bool input() {
       if ( ! ( cin >> n ) )
         return false;
@@ -218,7 +221,7 @@ namespace solution {
         cin >> P[i] >> X[i] >> Y[i];
       return true;
     }
-
+    
     void output() {
       for ( int i = 0; i < q; ++ i )
         if ( results[i] != NONE )
@@ -235,4 +238,5 @@ namespace solution {
 int main() {
   return solution::Solution().run();
 }
+
 
