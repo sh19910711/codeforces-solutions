@@ -70,10 +70,12 @@ namespace solution {
 namespace solution {
   // namespaces, types
   using namespace std;
-  typedef unsigned int Int;
+  typedef unsigned long long Int;
 
-  const int hash_bases_num = 2;
-  const Int hash_bases[hash_bases_num] = { 89, 97 };
+
+  const int hash_bases_num = 6;
+  const Int hash_bases[hash_bases_num] = { 89, 97, 61, 67, 223, 227 };
+
   class Hash {
   public:
     Int hashs[hash_bases_num];
@@ -137,6 +139,7 @@ namespace solution {
   public:
     void solve() {
       normalize();
+
       calc_table_t();
       calc_hash_s();
 
@@ -170,6 +173,7 @@ namespace solution {
     }
 
     void calc_hash_s() {
+      hash_s = Hash();
       for ( int i = 0; i < n; ++ i )
         hash_s.add(S[i]);
     }
@@ -187,10 +191,14 @@ namespace solution {
     bool is_invalid_case() {
       for ( int i = 0; i < n; ++ i )
         P[i] = i;
+
       hash_p = Hash();
       for ( int i = 0; i < n; ++ i )
         hash_p.add(P[i]);
       hash_p_first = hash_p;
+
+      if ( hash_p_first == hash_s )
+        return true;
 
       do {
         get_next_permutation_p();
@@ -202,24 +210,25 @@ namespace solution {
     }
 
     bool is_invalid_case_k() {
-      int left_rolls = get_minimum_operations_a();
+      int left_rolls  = get_minimum_operations_a();
       int right_rolls = get_minimum_operations_b();
 
-      if ( left_rolls < k && right_rolls < k )
-        return true;
+      if ( left_rolls == 1 && right_rolls == 1 )
+        return k != 1;
 
-      if ( k % 2 == left_rolls % 2 )
+      if ( k >= left_rolls && k % 2 == left_rolls % 2 )
         return false;
 
-      if ( k % 2 == right_rolls % 2 )
+      if ( k >= right_rolls && k % 2 == right_rolls % 2 )
         return false;
-
+ 
       return true;
     }
 
     int get_minimum_operations_a() {
       for ( int i = 0; i < n; ++ i )
         P[i] = i;
+
       hash_p = Hash();
       for ( int i = 0; i < n; ++ i )
         hash_p.add(P[i]);
@@ -227,7 +236,7 @@ namespace solution {
       int res = 0;
       while ( hash_p != hash_s ) {
         get_next_permutation_p();
-         res ++;
+        res ++;
       }
       return res;
     }
@@ -235,6 +244,7 @@ namespace solution {
     int get_minimum_operations_b() {
       for ( int i = 0; i < n; ++ i )
         P[i] = i;
+
       hash_p = Hash();
       for ( int i = 0; i < n; ++ i )
         hash_p.add(P[i]);
@@ -242,7 +252,7 @@ namespace solution {
       int res = 0;
       while ( hash_p != hash_s ) {
         get_next_permutation_p_rev();
-         res ++;
+        res ++;
       }
       return res;
     }
@@ -251,22 +261,28 @@ namespace solution {
       for ( int i = 0; i < n; ++ i ) {
         tmp[Q[i]] = P[i];
       }
-      for ( int i = 0; i < n; ++ i )
+      for ( int i = 0; i < n; ++ i ) {
         P[i] = tmp[i];
+      }
+
       hash_p = Hash();
-      for ( int i = 0; i < n; ++ i )
+      for ( int i = 0; i < n; ++ i ) {
         hash_p.add(P[i]);
+      }
     }
 
     void get_next_permutation_p_rev() {
       for ( int i = 0; i < n; ++ i ) {
         tmp[T[i]] = P[i];
       }
-      for ( int i = 0; i < n; ++ i )
+      for ( int i = 0; i < n; ++ i ) {
         P[i] = tmp[i];
+      }
+
       hash_p = Hash();
-      for ( int i = 0; i < n; ++ i )
+      for ( int i = 0; i < n; ++ i ) {
         hash_p.add(P[i]);
+      }
     }
     
   private:
@@ -289,7 +305,6 @@ namespace solution {
     }
 
     void init() {
-      hash_s = Hash();
     }
 
     bool input() {
