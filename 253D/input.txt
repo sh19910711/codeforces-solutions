@@ -1,0 +1,9 @@
+3 4 4
+aabb
+baab
+baab
+4 5 1
+ababa
+ccaca
+ccacb
+cbabc
