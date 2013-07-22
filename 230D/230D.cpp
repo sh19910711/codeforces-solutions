@@ -70,12 +70,11 @@ namespace solution {
 namespace solution {
   // namespaces, types
   using namespace std;
-  typedef set<int> Set;
+  typedef set<int, std::greater<int> > Set;
   typedef vector<II> VII;
 
-  typedef pair<int, II> Node; // (steps, weight, delay)
+  typedef II Node; // (steps, weight, delay)
   typedef std::queue<Node> Queue;
-  typedef map<II, int> Map;
 }
 
 // @snippet<sh19910711/contest:solution/variables-area.cpp>
@@ -93,8 +92,8 @@ namespace solution {
   int K[SIZE];
   Set T[SIZE];
 
-  VII G[SIZE]; // (cost, planet)
-  Map min_cost; // (planet, times, delay) := min steps
+  VII G[SIZE]; 
+  int min_cost[SIZE]; 
 
   int result;
 }
@@ -124,54 +123,39 @@ namespace solution {
 
     int get_minimum_steps() {
       int res = NONE;
+
       Queue Q;
-      Q.push(Node(0, II(0, 0)));
-      min_cost.clear();
-      min_cost[II(0, 0)] = 0;
+      Q.push(Node(0, 0));
+      fill(min_cost, min_cost + SIZE, NONE);
+      min_cost[0] = 0;
 
       while ( ! Q.empty() ) {
         Node node = Q.front();
         Q.pop();
 
-        int steps  = node.first;
-        int planet = node.second.first;
-        int delay  = node.second.second;
+        int planet = node.first;
+        int steps = node.second;
 
-        // printf("@search: steps = %d, planet = %d, delay = %d\n", steps, planet + 1, delay);
-
-        if ( planet == n - 1 ) {
-          res = min(res, steps);
-          continue;
-        }
-
-        if ( check_need_wait(planet, steps) ) {
-          int next_steps = steps + 1;
-          int next_planet = planet;
-          int next_delay = delay + 1;
-          if ( min_cost.count(II(next_planet, next_delay)) && next_steps >= min_cost[II(next_planet, next_delay)] )
-            continue;
-          min_cost[II(next_planet, next_delay)] = next_steps;
-          Q.push(Node(next_steps, II(next_planet, next_delay)));
-          continue;
+        while ( check_need_wait(planet, steps) ) {
+          steps ++;
         }
 
         int connected_planets = G[planet].size();
         for ( int i = 0; i < connected_planets; ++ i ) {
           int next_planet = G[planet][i].second;
           int next_steps = steps + G[planet][i].first;
-          int next_delay = 0;
-          if ( min_cost.count(II(next_planet, next_delay)) && next_steps >= min_cost[II(next_planet, next_delay)] )
+          if ( next_steps >= min_cost[next_planet] )
             continue;
-          min_cost[II(next_planet, next_delay)] = next_steps;
-          Q.push(Node(next_steps, II(next_planet, next_delay)));
+          min_cost[next_planet] = next_steps;
+          Q.push(Node(next_planet, next_steps));
         }
       }
 
-      return res;
+      return min_cost[n - 1];
     }
 
     bool check_need_wait( int planet, int steps ) {
-      return T[planet].upper_bound(steps) != T[planet].end();
+      return T[planet].find(steps) != T[planet].end();
     }
 
     void normalize() {
