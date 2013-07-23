@@ -70,7 +70,6 @@ namespace solution {
 namespace solution {
   // namespaces, types
   using namespace std;
-  
 }
 
 // @snippet<sh19910711/contest:solution/variables-area.cpp>
@@ -105,19 +104,11 @@ namespace solution {
     }
 
     int get_worst_rank() {
-      int res = NONE;
-      int min_sum = std::numeric_limits<int>::max();
-      for ( int i = 0; i < n; ++ i ) {
-        int key = x - A[i];
-        if ( key >= 0 ) {
-          int id = std::lower_bound(B, B + n, key) - B;
-          if ( id >= n )
-            continue;
-          int sum = A[i] + B[id];
-          if ( sum >= min_sum )
-            continue;
-          min_sum = sum;
-          res = max(res, n - id);
+      int res = 0;
+      for ( int i = 0, j = n - 1; i < n; ++ i ) {
+        if ( A[i] + B[j] >= x ) {
+          res ++;
+          j --;
         }
       }
       return res;
