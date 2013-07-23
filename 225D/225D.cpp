@@ -9,6 +9,8 @@
 #include <map>
 #include <stack>
 #include <queue>
+#include <deque>
+#include <list>
 #include <algorithm>
 #include <numeric>
 #include <limits>
@@ -88,6 +90,43 @@ namespace io {
   }
 }
 
+namespace io {
+  template <typename T> std::ostream& operator <<( std::ostream& os, const std::deque<T>& v ) {
+    typedef typename std::deque<T>::const_iterator Iterator;
+    for ( Iterator it_i = v.begin(); it_i != v.end(); ++ it_i ) {
+      os << *it_i;
+      if ( it_i + 1 != v.end() )
+        os << OUTPUT_VECTOR_DELIMITER;
+    }
+    return os;
+  }
+  template <typename T> std::istream& operator >>( std::istream& is, std::deque<T>& v ) {
+    int n = v.size();
+    for ( int i = 0; i < n; ++ i ) {
+      is >> v[i];
+    }
+    return is;
+  }
+}
+
+namespace io {
+  template <typename T> std::ostream& operator <<( std::ostream& os, const std::list<T>& v ) {
+    typedef typename std::list<T>::const_iterator Iterator;
+    for ( Iterator it_i = v.begin(); it_i != v.end(); ++ it_i ) {
+      os << *it_i;
+      os << OUTPUT_VECTOR_DELIMITER << " ";
+    }
+    return os;
+  }
+  template <typename T> std::istream& operator >>( std::istream& is, std::list<T>& v ) {
+    int n = v.size();
+    for ( int i = 0; i < n; ++ i ) {
+      is >> v[i];
+    }
+    return is;
+  }
+}
+
 // @snippet<sh19910711/contest:solution/typedef.cpp>
 namespace solution {
   typedef std::istringstream ISS;
@@ -98,7 +137,6 @@ namespace solution {
   typedef std::vector<INT> VI;
   typedef std::vector<VI> VVI;
   typedef std::pair<INT,INT> II;
-  typedef std::vector<II> VII;
 }
 
 // @snippet<sh19910711/contest:solution/namespace-area.cpp>
@@ -107,17 +145,19 @@ namespace solution {
   using namespace std;
   using namespace io;
 
-  typedef std::vector<II> VII;
+  typedef std::list<II> VII;
+  typedef std::set<II> SII;
   
-  typedef std::pair<int, VII> Node;
-  typedef std::queue<Node> Queue;
-  typedef std::map<VII, int> Map;
+  // typedef std::pair<II, VII> State;
+  // typedef std::pair<int, State> Node;
+  // typedef std::queue<Node> Queue;
+  typedef std::set<VII> Visited;
 }
 
 // @snippet<sh19910711/contest:solution/variables-area.cpp>
 namespace solution {
   // constant vars
-  const int SIZE        = 15 + 11;
+  const int SIZE        = 15;
   const int NONE        = std::numeric_limits<int>::max();
   const char CHAR_APPLE = '@';
   const char CHAR_EMPTY = '.';
@@ -132,10 +172,13 @@ namespace solution {
   string S[SIZE];
   
   VII start_snake;
-  II apple_pos;
+  int gr, gc;
 
-  Queue Q;
-  Map MC;
+  std::queue <int> Q_steps;
+  std::queue <int> Q_r;
+  std::queue <int> Q_c;
+  std::queue <VII> Q_snake;
+  Visited visited;
 
   int result;
 }
@@ -150,22 +193,30 @@ namespace solution {
     }
     
     void normalize() {
-      int len = get_snake_length();
-      start_snake = VII(len);
+      int snake_len = 0;
+      II snake_segments[SIZE];
       for ( int i = 0; i < H; ++ i ) {
         for ( int j = 0; j < W; ++ j ) {
           char c = S[i][j];
           if ( is_digit(c) ) {
             int ind = c - '1';
-            start_snake[ind] = II(i, j);
+            snake_segments[ind] = II(i, j);
+            snake_len ++;
             S[i][j] = CHAR_EMPTY;
           }
         }
       }
+
+      start_snake.clear();
+      for ( int i = 0; i + 1 < snake_len; ++ i ) {
+        start_snake.push_back(snake_segments[i]);
+      }
+
       for ( int i = 0; i < H; ++ i ) {
         for ( int j = 0; j < W; ++ j ) {
           if ( S[i][j] == CHAR_APPLE ) {
-            apple_pos = II(i, j);
+            gr = i;
+            gc = j;
             S[i][j] = CHAR_EMPTY;
           }
         }
@@ -176,85 +227,75 @@ namespace solution {
       return '0' <= c && c <= '9';
     }
     
-    int get_snake_length() {
-      int res = 0;
-      for ( int i = 0; i < H; ++ i ) {
-        for ( int j = 0; j < W; ++ j ) {
-          if ( is_digit(S[i][j]) ) {
-            res ++;
-          }
-        }
-      }
-      return res;
-    }
-
-    int get_min_cost( const VII& key ) {
-      return MC.count(key) ? MC[key] : NONE;
-    }
-    
     int get_minimum_steps() {
       int res = NONE;
-      Q = Queue();
-      MC.clear();
 
-      Node start_node(0, start_snake);
-      Q.push(start_node);
-      MC[start_snake] = 0;
+      Q_steps = std::queue <int>();
+      Q_r = std::queue <int>();
+      Q_c = std::queue <int>();
+      Q_snake = std::queue <VII>();
+      visited.clear();
 
-      while ( ! Q.empty() ) {
-        Node node = Q.front();
-        Q.pop();
+      const II& start_snake_head = *start_snake.begin();
+      Q_steps.push(0);
+      Q_r.push(start_snake_head.first);
+      Q_c.push(start_snake_head.second);
+      Q_snake.push(start_snake);
+      visited.insert(start_snake);
 
-        int steps = node.first;
-        VII snake = node.second;
+      while ( ! Q_steps.empty() ) {
+        int steps = Q_steps.front();
+        Q_steps.pop();
+        int r = Q_r.front();
+        Q_r.pop();
+        int c = Q_c.front();
+        Q_c.pop();
+        VII snake = Q_snake.front();
+        Q_snake.pop();
 
-        if ( snake[0] == apple_pos )
+        if ( r == gr && c == gc )
           return steps;
 
+        SII segments(snake.begin(), snake.end());
+
         for ( int k = 0; k < 4; ++ k ) {
-          VII next_snake = get_next_snake(snake, k);
+          int nr = r + dr[k];
+          int nc = c + dc[k];
+          II next_head(nr, nc);
+          if ( is_invalid_pos(nr, nc) )
+            continue;
+          if ( segments.count(next_head) )
+            continue;
+
+          VII next_snake = snake;
+          next_snake.push_front(next_head);
+          next_snake.pop_back();
           int next_steps = steps + 1;
 
-          if ( next_steps >= get_min_cost(next_snake) )
+          if ( visited.count(next_snake) )
             continue;
-          MC[next_snake] = next_steps;
+          visited.insert(next_snake);
 
-          Q.push(Node(next_steps, next_snake));
+          Q_steps.push(next_steps);
+          Q_r.push(nr);
+          Q_c.push(nc);
+          Q_snake.push(next_snake);
         }
       }
 
       return res;
     }
 
-    VII get_next_snake( VII current, const int& dir ) {
-      VII res;
-
+    void get_next_snake( VII& current, const int& dir ) {
       int& sr = (*current.begin()).first;
       int& sc = (*current.begin()).second;
-      res.push_back(II(sr + dr[dir], sc + dc[dir]));
-      for ( VII::iterator it_i = current.begin(); it_i + 1 != current.end(); ++ it_i ) {
-        res.push_back(*it_i);
-      }
 
-      for ( VII::iterator it_i = res.begin(); it_i != res.end(); ++ it_i ) {
-        if ( is_invalid_pos(*it_i) )
-          return INVALID_SNAKE;
-      }
-
-      for ( VII::iterator it_i = res.begin(); it_i != res.end(); ++ it_i ) {
-        for ( VII::iterator it_j = it_i + 1; it_j != res.end(); ++ it_j ) {
-          if ( *it_i == *it_j )
-            return INVALID_SNAKE;
-        }
-      }
-
-      return res;
     }
 
-    bool is_invalid_pos( const II& pos ) {
-      if ( pos.first < 0 || pos.first >= H || pos.second < 0 || pos.second >= W )
+    bool is_invalid_pos( const int& r, const int& c ) {
+      if ( r < 0 || r >= H || c < 0 || c >= W )
         return true;
-      if ( S[pos.first][pos.second] == CHAR_WALL )
+      if ( S[r][c] == CHAR_WALL )
         return true;
       return false;
     }
