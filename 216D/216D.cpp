@@ -81,12 +81,10 @@ namespace solution {
   const int P_SIZE = 10;
   // storages
   int n;
-  int K0, K1;
-  int K[P_SIZE];
-  int P0[BRIDGES];
-  int P1[BRIDGES];
-  int P[P_SIZE][BRIDGES];
-  int P_offset;
+  int K[SECTORS];
+  int* P[SECTORS];
+  int bridges[BRIDGES];
+  int bridges_num;
 
   int L[BRIDGES];
   int R[BRIDGES];
@@ -99,107 +97,42 @@ namespace solution {
   class Solver {
   public:
     void solve() {
+      normalize();
       result = find_unstable_cells();
+    }
+
+    void normalize() {
+      for ( int i = 0; i < n; ++ i ) {
+        sort(P[i], P[i] + K[i]);
+      }
     }
 
     int find_unstable_cells() {
       int res = 0;
-      for ( int t = 0; t < n; ++ t ) {
-        cin >> K[P_offset];
-        for ( int i = 0; i < K[P_offset]; ++ i ) {
-          cin >> P[P_offset][i];
+      for ( int i = 0; i < n; ++ i ) {
+        int prev = ( i - 1 + n ) % n;
+        int next = ( i + 1 + n ) % n;
+        for ( int j = 0; j < K[prev]; ++ j ) {
+          L[j] = P[prev][j];
+        }
+        for ( int j = 0; j < K[next]; ++ j ) {
+          R[j] = P[next][j];
         }
 
-        if ( t == 0 ) {
-          K0 = K[P_offset];
-          for ( int i = 0; i < K0; ++ i ) {
-            P0[i] = P[P_offset][i];
-          }
-        }
-
-        if ( t == 1 ) {
-          K1 = K[P_offset];
-          for ( int i = 0; i < K1; ++ i ) {
-            P1[i] = P[P_offset][i];
-          }
-        }
-
-        if ( t > 0 && t < n - 1 ) {
-          int prev = ( P_offset - 1 + P_SIZE ) % P_SIZE;
-          int next = ( P_offset + 1 ) % P_SIZE;
-          for ( int i = 0; i < n; ++ i ) {
-            for ( int j = 0; j < K[prev]; ++ j ) {
-              L[j] = P[prev][j];
-            }
-            for ( int j = 0; j < K[next]; ++ j ) {
-              R[j] = P[next][j];
-            }
-          }
-          sort(L, L + K[prev]);
-          sort(R, R + K[next]);
-
-          for ( int i = 0; i + 1 < K[P_offset]; ++ i ) {
-            int a = P[P_offset][i];
-            int b = P[P_offset][i + 1];
-            int left_left   = std::upper_bound(L, L + K[prev], a) - L;
-            int left_right  = std::upper_bound(L, L + K[prev], b) - L;
-            int right_left  = std::upper_bound(R, R + K[next], a) - R;
-            int right_right = std::upper_bound(R, R + K[next], b) - R;
-            int left_num    = max(0, left_right - left_left);
-            int right_num   = max(0, right_right - right_left);
-            if ( left_num != right_num ) {
-              res ++;
-            }
-          }
-        }
-
-        P_offset = ( P_offset + 1 ) % P_SIZE;
-      }
-
-      K[P_offset] = K0;
-      for ( int i = 0; i < K0; ++ i ) {
-        P[P_offset][i] = P0[i];
-      }
-      P_offset = ( P_offset + 1 + P_SIZE ) % P_SIZE;
-
-      K[P_offset] = K1;
-      for ( int i = 0; i < K1; ++ i ) {
-        P[P_offset][i] = P1[i];
-      }
-      P_offset = ( P_offset + 1 + P_SIZE ) % P_SIZE;
-
-      P_offset = ( P_offset - 3 + P_SIZE ) % P_SIZE;
-      for ( int t = 0; t < 2; ++ t ) {
-        int prev = ( P_offset - 1 + P_SIZE ) % P_SIZE;
-        int next = ( P_offset + 1 ) % P_SIZE;
-        for ( int i = 0; i < n; ++ i ) {
-          for ( int j = 0; j < K[prev]; ++ j ) {
-            L[j] = P[prev][j];
-          }
-          for ( int j = 0; j < K[next]; ++ j ) {
-            R[j] = P[next][j];
-          }
-        }
-        sort(L, L + K[prev]);
-        sort(R, R + K[next]);
-
-        for ( int i = 0; i + 1 < K[P_offset]; ++ i ) {
-          int a = P[P_offset][i];
-          int b = P[P_offset][i + 1];
-          int left_left   = std::upper_bound(L, L + K[prev], a) - L;
-          int left_right  = std::upper_bound(L, L + K[prev], b) - L;
-          int right_left  = std::upper_bound(R, R + K[next], a) - R;
+        for ( int j = 0; j + 1 < K[i]; ++ j ) {
+          int a = P[i][j];
+          int b = P[i][j + 1];
+          int left_left = std::upper_bound(L, L + K[prev], a) - L;
+          int left_right = std::upper_bound(L, L + K[prev], b) - L;
+          int right_left = std::upper_bound(R, R + K[next], a) - R;
           int right_right = std::upper_bound(R, R + K[next], b) - R;
-          int left_num    = max(0, left_right - left_left);
-          int right_num   = max(0, right_right - right_left);
+          int left_num = left_right - left_left;
+          int right_num = right_right - right_left;
           if ( left_num != right_num ) {
             res ++;
           }
         }
-
-        P_offset = ( P_offset + 1 ) % P_SIZE;
       }
-
       return res;
     }
     
@@ -225,6 +158,13 @@ namespace solution {
     bool input() {
       if ( ! ( cin >> n ) )
         return false;
+      for ( int i = 0; i < n; ++ i ) {
+        cin >> K[i];
+        P[i] = bridges + bridges_num;
+        for ( int j = 0; j < K[i]; ++ j ) {
+          cin >> bridges[bridges_num ++];
+        }
+      }
       return true;
     }
 
