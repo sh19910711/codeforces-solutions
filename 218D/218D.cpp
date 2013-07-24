@@ -92,7 +92,14 @@ namespace solution {
   class Solver {
   public:
     void solve() {
-      mistakes = find_min_mistakes();
+      if ( n == 1 ) {
+        if ( r == 1 ) {
+          mistakes = 0;
+          result = "T";
+        }
+      } else {
+        mistakes = find_min_mistakes();
+      }
     }
 
     int find_min_mistakes() {
@@ -131,23 +138,19 @@ namespace solution {
     }
 
     void generate_result( int a, int b ) {
-      bool top = true;
-      result = "";
+      int nums[50];
+      int nums_num = 0;
       while ( a > 0 ) {
-        if ( a == 1 ) {
-          int num = b - 1;
-          result += string(num, top ? 'T' : 'B') + "B";
-          top = ! top;
-          b %= a;
-          swap(a, b);
-          break;
-        } else {
-          int num = b / a;
-          result += string(num, top ? 'T' : 'B');
-          top = ! top;
-          b %= a;
-          swap(a, b);
-        }
+        int num = b / a;
+        nums[nums_num ++] = num;
+        b %= a;
+        swap(a, b);
+      }
+
+      result = "T";
+      nums[nums_num - 1] --;
+      for ( int i = 0; i < nums_num; ++ i ) {
+        result += string(nums[nums_num - i - 1], i % 2 == 0 ? 'B' : 'T');
       }
     }
     
