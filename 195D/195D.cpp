@@ -70,9 +70,8 @@ namespace solution {
 namespace solution {
   // namespaces, types
   using namespace std;
-  typedef double Double;
-  typedef std::pair<Double, std::pair<LL, LL> > Entry;
-  typedef std::set<std::pair<LL, LL> > Set;
+  typedef long double Double;
+  typedef std::set<Double> Set;
 }
 
 // @snippet<sh19910711/contest:solution/variables-area.cpp>
@@ -84,10 +83,7 @@ namespace solution {
   LL X[SIZE];
   LL B[SIZE];
 
-  Entry entries[SIZE];
   Set s;
-  LL x_sum;
-  LL b_sum;
 
   int result;
 }
@@ -97,36 +93,14 @@ namespace solution {
   class Solver {
   public:
     void solve() {
-      normalize();
-      std::sort(entries, entries + n);
-      calc_sum();
       result = get_angles();
-    }
-
-    void calc_sum() {
-      x_sum = std::accumulate(X, X + n, 0LL);
-      b_sum = std::accumulate(B, B + n, 0LL);
-    }
-
-    void normalize() {
-      for ( int i = 0; i < n; ++ i ) {
-        Double m;
-        if ( X[i] != 0 ) {
-          m = -(Double)B[i] / X[i];
-        } else {
-          m = 0;
-        }
-        entries[i] = std::make_pair(m, std::make_pair(X[i], B[i]));
-      }
     }
 
     int get_angles() {
       for ( int i = 0; i < n; ++ i ) {
         if ( X[i] != 0 ) {
-          s.insert(std::make_pair(x_sum, b_sum));
+          s.insert(- (Double)B[i] / X[i]);
         }
-        x_sum -= entries[i].second.first;
-        b_sum -= entries[i].second.second;
       }
       return s.size();
     }
