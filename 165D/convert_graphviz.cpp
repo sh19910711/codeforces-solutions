@@ -39,7 +39,7 @@ int main() {
       boost::add_edge(A[i], B[i], G);
     }
 
-    const char* names[9] = {
+    const char* names[30] = {
       "1",
       "2",
       "3",
@@ -48,7 +48,28 @@ int main() {
       "6",
       "7",
       "8",
-      "9"
+      "9",
+      "10",
+      "11",
+      "12",
+      "13",
+      "14",
+      "15",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21",
+      "22",
+      "23",
+      "24",
+      "25",
+      "26",
+      "27",
+      "28",
+      "29",
+      "30",
     };
     boost::write_graphviz(std::cout, G, boost::make_label_writer(names));
   }

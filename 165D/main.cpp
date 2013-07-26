@@ -142,6 +142,7 @@ namespace solution {
       calc_dist(root, 0);
       calc_edge_dist();
       find_group();
+      find_edge_group();
 
       proc_queries();
     }
@@ -165,7 +166,6 @@ namespace solution {
       for ( int i = 0; i < num_vertices; ++ i ) {
         int to = G[root][i];
         find_group(to, root);
-        edge_group[get_edge_id_from_vertices(root, to)] = uf.root(to);
       }
     }
 
@@ -179,12 +179,19 @@ namespace solution {
 
         uf.merge(cur, to);
         find_group(to, cur);
+      }
+    }
 
-        edge_group[get_edge_id_from_vertices(cur, to)] = uf.root(cur);
+    void find_edge_group() {
+      for ( int i = 0; i < n - 1; ++ i ) {
+        edge_group[i] = uf.root(std::max(A[i], B[i]));
       }
     }
     
     int query_minimum_dist( int x, int y ) {
+      if ( x == y ) {
+        return 0;
+      }
       if ( uf.same(x, y) ) {
         int dx = dist[x];
         int dy = dist[y];
@@ -194,23 +201,27 @@ namespace solution {
         }
         return std::max(dx, dy) - std::min(dx, dy);
       } else {
+        int dx = dist[x];
+        int dy = dist[y];
         int gx = uf.root(x);
         int gy = uf.root(y);
         int wx_dist = white_edges[gx].size() ? *white_edges[gx].rbegin() : INF;
         int wy_dist = white_edges[gy].size() ? *white_edges[gy].rbegin() : INF;
-        if ( dist[x] > wx_dist || dist[y] > wy_dist ) {
+        if ( dx > wx_dist || dy > wy_dist ) {
           return DIST_NONE;
         }
-        return dist[x] + dist[y];
+        return dx + dy;
       }
       return DIST_NONE;
     }
     
     void query_set_color( int edge_id, int color ) {
+      int gid = edge_group[edge_id];
+      int dist = edge_dist[edge_id];
       if ( color == EDGE_COLOR_WHITE ) {
-        white_edges[edge_group[edge_id]].insert(edge_dist[edge_id]);
+        white_edges[gid].insert(dist);
       } else if ( color == EDGE_COLOR_BLACK ) {
-        white_edges[edge_group[edge_id]].erase(edge_dist[edge_id]);
+        white_edges[gid].erase(dist);
       }
     }
 
