@@ -144,6 +144,7 @@ namespace solution {
       find_group();
       find_edge_group();
 
+
       proc_queries();
     }
 
@@ -154,7 +155,7 @@ namespace solution {
     void proc_queries() {
       for ( int i = 0; i < m; ++ i ) {
         if ( T[i] == 3 ) {
-          query_results[i] = query_minimum_dist(X[i], Y[i]);
+          query_results[i] = query_minimum_dist(std::min(X[i], Y[i]), std::max(X[i], Y[i]));
         } else {
           query_set_color(X[i], T[i] == 1 ? EDGE_COLOR_BLACK : EDGE_COLOR_WHITE);
         }
@@ -184,7 +185,10 @@ namespace solution {
 
     void find_edge_group() {
       for ( int i = 0; i < n - 1; ++ i ) {
-        edge_group[i] = uf.root(std::max(A[i], B[i]));
+        int vertex = A[i];
+        if ( vertex == root )
+          vertex = B[i];
+        edge_group[i] = uf.root(vertex);
       }
     }
     
@@ -196,8 +200,16 @@ namespace solution {
         int dx = dist[x];
         int dy = dist[y];
         int g = uf.root(x);
-        if ( white_edges[g].count(std::min(dx, dy)) ) {
-          return DIST_NONE;
+        int ld = std::min(dx, dy);
+        int ud = std::max(dx, dy);
+        if ( white_edges[g].size() ) {
+          Set::iterator it_lb = white_edges[g].lower_bound(ld);
+          if ( it_lb != white_edges[g].end() ) {
+            int wd = *it_lb;
+            if ( ld <= wd && wd < ud ) {
+              return DIST_NONE;
+            }
+          }
         }
         return std::max(dx, dy) - std::min(dx, dy);
       } else {
