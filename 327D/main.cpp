@@ -66,157 +66,37 @@ namespace solution {
   typedef std::vector<II> VII;
 }
 
-// @snippet<sh19910711/contest:search/search_interface.cpp>
-namespace search {
-  template <class Node> class SearchInterface {
-  public:
-    virtual Node search() = 0;
-  };
-}
-
-// @snippet<sh19910711/contest:search/breadth_first_search_base.cpp>
-namespace search {
-  template <class Node> class BreadthFirstSearchBase: public SearchInterface<Node> {
-  public:
-    virtual Node search() {
-      Node res = get_none_node();
-      init();
-      while ( has_next_node() ) {
-        Node node = get_next_node();
-        if ( is_goal_node(node) )
-          res = node;
-        visit_next_node(node);
-      }
-      return res;
-    }
-    
-  protected:
-    virtual void init()                              = 0; 
-    virtual bool has_next_node()                     = 0;
-    virtual void visit_next_node( const Node& node ) = 0;
-    virtual void push_next_node( const Node& node )  = 0;
-    virtual Node get_next_node()                     = 0;
-    virtual Node get_none_node()                     = 0;
-    virtual bool is_visited_node( const Node& node ) = 0;
-    virtual void set_visited( const Node& node )     = 0;
-    virtual bool is_goal_node( const Node& node )    = 0;
-    
-  };
-}
-
-// @snippet<sh19910711/contest:search/breadth_first_search.cpp>
-namespace search {
-  template <class Node> class BreadthFirstSearch: public BreadthFirstSearchBase<Node> {
-  protected:
-    virtual void init() {}
-    
-    bool has_next_node() {
-      return ! Q.empty();
-    }
-    
-    Node get_next_node() {
-      Node res = Q.front();
-      Q.pop();
-      return res;
-    }
-    
-    void push_next_node( const Node& node ) {
-      Q.push(node);
-    }
-    
-  protected:
-    std::queue <Node> Q;
-  };
-}
-
 // @snippet<sh19910711/contest:solution/namespace-area.cpp>
 namespace solution {
   // namespaces, types
   using namespace std;
+  
 }
 
 // @snippet<sh19910711/contest:solution/variables-area.cpp>
 namespace solution {
   // constant vars
-  const int SIZE = 1000 + 11;
+  const int SIZE = 500 + 11;
+  const int MAX_COMMANDS = 1000000 + 11;
+  const string BLUE_TYPE = "B";
+  const string RED_TYPE = "R";
+  const string DELETE_TYPE = "D";
+  const char EMPTY_CELL = '.';
+  const char WALL_CELL = '#';
+  const char BLUE_CELL = 'B';
+  const char RED_CELL = 'R';
+
   const int dr[4] = {1, -1, 0, 0};
   const int dc[4] = {0, 0, 1, -1};
-  const char START_CELL = 'S';
-  const char GOAL_CELL = 'E';
-  const char WALL_CELL = 'T';
-  const char EMPTY_CELL = '0';
-  const int INF = std::numeric_limits<int>::max();
+
   // storages
   int H, W;
   string S[SIZE];
-  
-  int start_r, start_c;
-  int goal_r, goal_c;
-  int min_dist[SIZE][SIZE];
-  int result;
-  
-  class Node {
-  public:
-    Node(): r(0), c(0), steps(0) {}
-    Node( int r, int c, int steps ): r(r), c(c), steps(steps) {}
-    
-    friend ostream& operator <<( ostream& os, const Node& node ) {
-      return os << "{" << node.r << ", " << node.c << ": steps = " << node.steps << "}";
-    }
-    
-    int steps;
-    int r;
-    int c;
-  };
-  const Node NONE_NODE(INF, INF, INF);
-  
-  class MyBFS: public search::BreadthFirstSearch<Node> {
-  protected:
-    virtual void init() {
-      for ( int i = 0; i < SIZE; ++ i ) {
-        for ( int j = 0; j < SIZE; ++ j ) {
-          min_dist[i][j] = INF;
-        }
-      }
-      Node start_node(goal_r, goal_c, 0);
-      set_visited(start_node);
-      push_next_node(start_node);
-    }
-    
-    virtual void visit_next_node( const Node& node ) {
-      int nsteps = node.steps + 1;
-      for ( int k = 0; k < 4; ++ k ) {
-        int nr = node.r + dr[k];
-        int nc = node.c + dc[k];
-        if ( nr < 0 || nr >= H || nc < 0 || nc >= W )
-          continue;
-        if ( S[nr][nc] == WALL_CELL )
-          continue;
-        Node next_node(nr, nc, nsteps);
-        if ( is_visited_node(next_node) )
-          continue;
-        set_visited(next_node);
-        push_next_node(next_node);
-      }
-    }
-    
-    virtual Node get_none_node() {
-      return NONE_NODE;
-    }
-    
-    virtual bool is_goal_node( const Node& node ) {
-      return node.r == start_r && node.c == start_c;
-    }
-    
-    virtual bool is_visited_node( const Node& node ) {
-      return node.steps >= min_dist[node.r][node.c];
-    }
-    
-    virtual void set_visited( const Node& node ) {
-      min_dist[node.r][node.c] = node.steps;
-    }
-  };
-  
+
+  int command_num;
+  string command_type[MAX_COMMANDS];
+  int command_r[MAX_COMMANDS];
+  int command_c[MAX_COMMANDS];
 }
 
 // @snippet<sh19910711/contest:solution/solver-area.cpp>
@@ -224,42 +104,55 @@ namespace solution {
   class Solver {
   public:
     void solve() {
+      command_num = 0;
+      find_base_point();
+    }
+
+    void find_base_point() {
       for ( int i = 0; i < H; ++ i ) {
         for ( int j = 0; j < W; ++ j ) {
-          if ( S[i][j] == START_CELL ) {
-            start_r = i;
-            start_c = j;
-            S[i][j] = EMPTY_CELL;
-          }
-          if ( S[i][j] == GOAL_CELL ) {
-            goal_r = i;
-            goal_c = j;
-            S[i][j] = EMPTY_CELL;
+          if ( S[i][j] == EMPTY_CELL ) {
+            rec(i, j, true);
           }
         }
       }
-      bfs.search();
-      result = get_minimum_battles();
     }
-    
-    int get_minimum_battles() {
-      int res = 0;
-      for ( int i = 0; i < H; ++ i ) {
-        for ( int j = 0; j < W; ++ j ) {
-          if ( min_dist[i][j] <= min_dist[start_r][start_c] ) {
-            res += to_int(S[i][j]);
-          }
-        }
+
+    void add_command( string type, int r, int c ) {
+      command_type[command_num] = type;
+      command_r[command_num] = r;
+      command_c[command_num] = c;
+      command_num ++;
+    }
+
+    void rec( int r, int c, bool first ) {
+      if ( S[r][c] != EMPTY_CELL )
+        return;
+
+      if ( first ) {
+        S[r][c] = BLUE_CELL;
+        add_command(BLUE_TYPE, r, c);
+      } else {
+        S[r][c] = RED_CELL;
+        add_command(BLUE_TYPE, r, c);
       }
-      return res;
+
+      for ( int k = 0; k < 4; ++ k ) {
+        int nr = r + dr[k];
+        int nc = c + dc[k];
+        if ( nr < 0 || nr >= H || nc < 0 || nc >= W )
+          continue;
+
+        rec(nr, nc, false);
+      }
+
+      if ( ! first ) {
+        add_command(DELETE_TYPE, r, c);
+        add_command(RED_TYPE, r, c);
+      }
     }
-    
-    int to_int( char c ) {
-      return c - '0';
-    }
-    
+
   private:
-    MyBFS bfs;
     
   };
 }
@@ -277,11 +170,7 @@ namespace solution {
       output();
       return true;
     }
-    
-    void init() {
-      result = 0;
-    }
-    
+
     bool input() {
       if ( ! ( cin >> H >> W ) )
         return false;
@@ -290,9 +179,12 @@ namespace solution {
       }
       return true;
     }
-    
+
     void output() {
-      cout << result << endl;
+      cout << command_num << endl;
+      for ( int i = 0; i < command_num; ++ i ) {
+        cout << command_type[i] << " " << command_r[i] + 1 << " " << command_c[i] + 1 << endl;
+      }
     }
     
   private:
@@ -307,5 +199,4 @@ int main() {
   return solution::Solution().run();
 }
 #endif
-
 
