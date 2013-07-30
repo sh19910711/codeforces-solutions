@@ -22,24 +22,30 @@
 
 // @snippet<sh19910711/contest:solution/interface.cpp>
 namespace solution {
-  class ISolution {
+  class SolutionInterface {
   public:
     virtual int run() = 0;
     
   protected:
+    virtual void pre_calc() {}
     virtual bool action() = 0;
     virtual void init() {};
     virtual bool input() { return false; };
     virtual void output() {};
+    
+    SolutionInterface() {}
+    
+  private:
     
   };
 }
 
 // @snippet<sh19910711/contest:solution/solution-base.cpp>
 namespace solution {
-  class SolutionBase: public ISolution {
+  class SolutionBase: public SolutionInterface {
   public:
     virtual int run() {
+      pre_calc();
       while ( action() );
       return 0;
     }
@@ -64,26 +70,26 @@ namespace solution {
 namespace solution {
   // namespaces, types
   using namespace std;
-  typedef map <II, int> Map;
+  
 }
 
 // @snippet<sh19910711/contest:solution/variables-area.cpp>
 namespace solution {
   // constant vars
-  const int SIZE = 50000 + 11;
-  const int dx[4] = {1, -1, 0 ,0};
+  const int SIZE       = 50000 + 11;
+  const int CNT_SIZE   = 5000;
+  const int CNT_OFFSET = CNT_SIZE / 2;
+
+  const int dx[4] = {1, -1, 0, 0};
   const int dy[4] = {0, 0, 1, -1};
-  const int GRID_SIZE = 400;
-  const int GRID_OFFSET = GRID_SIZE / 2;
 
   // storages
-  int n, t;
-  int X[SIZE];
-  int Y[SIZE];
-  int CNT[GRID_SIZE * GRID_SIZE];
+  int n, m;
+  int X[SIZE], Y[SIZE];
 
-  int results;
-  int A[SIZE];
+  int cnt[CNT_SIZE][CNT_SIZE];
+
+  int query_result[SIZE];
 }
 
 // @snippet<sh19910711/contest:solution/solver-area.cpp>
@@ -91,38 +97,44 @@ namespace solution {
   class Solver {
   public:
     void solve() {
-      for ( int i = 0; i < n; ++ i )
+      for ( ; n > 4; n -= 4 ) {
+        cnt[0 + CNT_OFFSET][0 + CNT_OFFSET] += 4;
         rec(0, 0);
-
-      results = 0;
-      for ( int i = 0; i < t; ++ i ) {
-        A[results ++] = query(X[i], Y[i]);
       }
-    }
-
-    int& mapping( int x, int y ) {
-      x += GRID_OFFSET;
-      y += GRID_OFFSET;
-      return CNT[y * GRID_OFFSET + x];
-    }
-
-    void rec( int x, int y ) {
-      int& cnt = mapping(x, y);
-      cnt ++;
-      if ( cnt >= 4 ) {
-        cnt -= 4;
-        for ( int k = 0; k < 4; ++ k ) {
-          int nx = x + dx[k];
-          int ny = y + dy[k];
-          rec(nx, ny);
-        }
+      for ( ; n > 0; -- n ) {
+        cnt[0 + CNT_OFFSET][0 + CNT_OFFSET] += 1;
+        rec(0, 0);
+      }
+      for ( int i = 0; i < m; ++ i ) {
+        query_result[i] = query(X[i], Y[i]);
       }
     }
 
     int query( int x, int y ) {
-      if ( abs(x) >= GRID_OFFSET || abs(y) >= GRID_OFFSET )
+      if ( abs(x) >= CNT_OFFSET || abs(y) >= CNT_OFFSET )
         return 0;
       return mapping(x, y);
+    }
+
+    int& mapping( int x, int y ) {
+      return cnt[x + CNT_OFFSET][y + CNT_OFFSET];
+    }
+
+    void rec( int x, int y ) {
+      if ( cnt[x + CNT_OFFSET][y + CNT_OFFSET] >= 4 ) {
+        cnt[x + CNT_OFFSET][y + CNT_OFFSET] -= 4;
+        for ( int k = 0; k < 4; ++ k ) {
+          int nx = x + dx[k];
+          int ny = y + dy[k];
+          cnt[nx + CNT_OFFSET][ny + CNT_OFFSET] ++;
+        }
+        for ( int k = 0; k < 4; ++ k ) {
+          int nx = x + dx[k];
+          int ny = y + dy[k];
+          if ( cnt[nx + CNT_OFFSET][ny + CNT_OFFSET] >= 4 )
+            rec(nx, ny);
+        }
+      }
     }
     
   private:
@@ -145,20 +157,24 @@ namespace solution {
     }
 
     void init() {
-      fill(CNT, CNT + GRID_SIZE * GRID_SIZE, 0);
+      for ( int i = 0; i < CNT_SIZE; ++ i )
+        for ( int j = 0; j < CNT_SIZE; ++ j )
+          cnt[i][j] = 0;
     }
 
     bool input() {
-      if ( ! ( cin >> n >> t ) )
+      if ( ! ( cin >> n >> m ) )
         return false;
-      for ( int i = 0; i < t; ++ i )
+      for ( int i = 0; i < m; ++ i ) {
         cin >> X[i] >> Y[i];
+      }
       return true;
     }
 
     void output() {
-      for ( int i = 0; i < results; ++ i )
-        cout << A[i] << endl;
+      for ( int i = 0; i < m; ++ i ) {
+        cout << query_result[i] << endl;
+      }
     }
     
   private:
@@ -168,7 +184,9 @@ namespace solution {
 }
 
 // @snippet<sh19910711/contest:main.cpp>
+#ifndef __MY_UNIT_TEST__
 int main() {
   return solution::Solution().run();
 }
+#endif
 
