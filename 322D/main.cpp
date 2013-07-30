@@ -79,7 +79,8 @@ namespace solution {
   const int SIZE = 100 + 11;
   const int OFF = 0;
   const int ON = 1;
-  const LL DP_NONE = -1;
+  const LL DP_NONE = -100;
+  const LL NONE = std::numeric_limits<LL>::min() / 2;
 
   // storages
   int n, m;
@@ -107,52 +108,37 @@ namespace solution {
     }
 
     void sort_cards() {
-      std::sort(jiro_def_s, jiro_def_s + jiro_def_s_num, std::less<int>());
-      std::sort(jiro_atk_s, jiro_atk_s + jiro_atk_s_num, std::less<int>());
-      std::sort(ciel_s, ciel_s + m, std::greater<int>());
+      std::sort(jiro_def_s, jiro_def_s + jiro_def_s_num);
+      std::sort(jiro_atk_s, jiro_atk_s + jiro_atk_s_num);
+      std::sort(ciel_s, ciel_s + m);
     }
 
     LL calc_maximum_damages() {
-      dp[0][0][0][OFF] = 0;
-      for ( int jiro_atk = jiro_atk_s_num; jiro_atk >= 0; -- jiro_atk ) {
-        for ( int jiro_def = jiro_def_s_num; jiro_def >= 0; -- jiro_def ) {
-          for ( int ciel = m; ciel >= 0; -- ciel ) {
-            for ( int flag = 0; flag < 2; ++ flag ) {
-              if ( dp[jiro_atk][jiro_def][ciel][flag] == DP_NONE )
-                continue;
-              if ( jiro_atk < jiro_atk_s_num && ciel_s[ciel] >= jiro_atk_s[jiro_atk] ) {
-                dp[jiro_atk + 1][jiro_def][ciel + 1][flag] = std::max(
-                    dp[jiro_atk + 1][jiro_def][ciel + 1][flag],
-                    dp[jiro_atk][jiro_def][ciel][flag] + ciel_s[ciel] - jiro_atk_s[jiro_atk]
-                    );
-              }
-              if ( jiro_def < jiro_def_s_num && ciel_s[ciel] > jiro_def_s[jiro_def] ) {
-                dp[jiro_atk][jiro_def + 1][ciel + 1][flag] = std::max(
-                    dp[jiro_atk][jiro_def + 1][ciel + 1][flag],
-                    dp[jiro_atk][jiro_def][ciel][flag]
-                    );
-              }
-              dp[jiro_atk][jiro_def][ciel + 1][ON] = std::max(
-                  dp[jiro_atk][jiro_def][ciel + 1][ON],
-                  dp[jiro_atk][jiro_def][ciel][flag] + ciel_s[ciel]
-                  );
-            }
-          }
+      return std::max(rec(0, 0, 0, OFF), rec(0, 0, 0, ON));
+    }
+
+    LL rec( int jiro_atk, int jiro_def, int ciel, int flag ) {
+      LL& res = dp[jiro_atk][jiro_def][ciel][flag];
+      if ( res != DP_NONE )
+        return res;
+
+      if ( ciel >= m ) {
+        if ( flag == ON && ( jiro_atk < jiro_atk_s_num || jiro_def < jiro_def_s_num ) ) {
+          return res = NONE;
         }
+        return res = 0;
       }
 
-      LL res = 0;
-      for ( int i = 0; i <= jiro_atk_s_num; ++ i ) {
-        for ( int j = 0; j <= jiro_def_s_num; ++ j ) {
-          for ( int k = 0; k <= m; ++ k ) {
-            if ( i == jiro_atk_s_num && j == jiro_def_s_num ) {
-              res = std::max(res, dp[i][j][k][ON]);
-            }
-            res = std::max(res, dp[i][j][k][OFF]);
-          }
-        }
+      LL ret = NONE;
+      ret = max(ret, rec(jiro_atk, jiro_def, ciel + 1, flag));
+      ret = max(ret, rec(jiro_atk, jiro_def, ciel + 1, ON) + ciel_s[ciel]);
+      if ( jiro_atk < jiro_atk_s_num && ciel_s[ciel] >= jiro_atk_s[jiro_atk] ) {
+        ret = max(ret, rec(jiro_atk + 1, jiro_def, ciel + 1, flag) + ciel_s[ciel] - jiro_atk_s[jiro_atk]);
       }
-      return res;
+      if ( jiro_def < jiro_def_s_num && ciel_s[ciel] > jiro_def_s[jiro_def] ) {
+        ret = max(ret, rec(jiro_atk, jiro_def + 1, ciel + 1, flag));
+      }
+      return res = ret;
     }
 
     void split_jiro() {
