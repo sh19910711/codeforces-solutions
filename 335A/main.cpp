@@ -70,7 +70,7 @@ namespace solution {
 namespace solution {
   // namespaces, types
   using namespace std;
-  typedef std::map<char, LL> Map;
+  typedef std::map<char, int> Map;
 }
 
 // @snippet<sh19910711/contest:solution/variables-area.cpp>
@@ -80,13 +80,13 @@ namespace solution {
   const string T_NONE = "";
   // storages
   string s;
-  LL n;
+  int n;
 
   Map s_cnt;
   Map t_cnt;
 
   string t;
-  LL k;
+  int k;
 }
 
 // @snippet<sh19910711/contest:solution/solver-area.cpp>
@@ -94,24 +94,24 @@ namespace solution {
   class Solver {
   public:
     void solve() {
-      if ( s.size() < n ) {
-        k = 1;
-        t = s + string(n - s.size(), s[0]);
-        return;
-      }
-
       t = get_t();
       if ( t == T_NONE ) {
         k = NONE;
         return;
       }
 
-      count_s();
       count_t();
-      k = get_nice_k();
+      k = 0;
+      string tmp_s = s;
+      while ( ! tmp_s.empty() ) {
+        int len = tmp_s.size();
+        len = std::min(len, n);
+        string sub = tmp_s.substr(0, len);
+        s = sub;
+        count_s();
 
-      if ( ! check_valid() ) {
-        k = NONE;
+        k += get_nice_k();
+        tmp_s = tmp_s.substr(len);
       }
     }
 
@@ -126,6 +126,7 @@ namespace solution {
     }
 
     void count_s() {
+      s_cnt.clear();
       int ns = s.size();
       for ( int i = 0; i < ns; ++ i ) {
         s_cnt[s[i]] ++;
@@ -133,16 +134,17 @@ namespace solution {
     }
 
     void count_t() {
+      t_cnt.clear();
       int nt = t.size();
       for ( int i = 0; i < nt; ++ i ) {
         t_cnt[t[i]] ++;
       }
     }
 
-    LL get_nice_k() {
-      LL lb = 0, ub = 10000000;
-      while ( ub - lb > 1 ) {
-        LL mid = ( lb + ub ) / 2;
+    int get_nice_k() {
+      int lb = 0, ub = 2000;
+      for ( int i = 0; i < 200; ++ i ) {
+        int mid = ( lb + ub ) / 2;
         if ( check(mid) ) {
           ub = mid;
         } else {
@@ -152,7 +154,7 @@ namespace solution {
       return ub;
     }
 
-    bool check( LL k ) {
+    bool check( int k ) {
       for ( char c = 'a'; c <= 'z'; ++ c ) {
         if ( t_cnt[c] * k < s_cnt[c] )
           return false;
@@ -178,6 +180,9 @@ namespace solution {
       std::sort(E.begin(), E.end(), std::greater<Entry>());
 
       int ne = E.size();
+      if ( n < ne )
+        return T_NONE;
+
       string res;
       int sum = 0;
       while ( sum < n ) {
