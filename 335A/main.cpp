@@ -70,23 +70,23 @@ namespace solution {
 namespace solution {
   // namespaces, types
   using namespace std;
-  typedef std::map<char, int> Map;
+  typedef std::map<char, LL> Map;
 }
 
 // @snippet<sh19910711/contest:solution/variables-area.cpp>
 namespace solution {
   // constant vars
-  const int NONE = -1;
-  const string T_NONE = "-1";
+  const int NONE = -100;
+  const string T_NONE = "";
   // storages
   string s;
-  int n;
+  LL n;
 
   Map s_cnt;
   Map t_cnt;
 
   string t;
-  int k;
+  LL k;
 }
 
 // @snippet<sh19910711/contest:solution/solver-area.cpp>
@@ -96,7 +96,7 @@ namespace solution {
     void solve() {
       if ( s.size() < n ) {
         k = 1;
-        t = s + string(n - s.size(), 'a');
+        t = s + string(n - s.size(), s[0]);
         return;
       }
 
@@ -116,6 +116,8 @@ namespace solution {
     }
 
     bool check_valid() {
+      if ( k == 0 )
+        return false;
       for ( char c = 'a'; c <= 'z'; ++ c ) {
         if ( t_cnt[c] * k < s_cnt[c] )
           return false;
@@ -137,10 +139,10 @@ namespace solution {
       }
     }
 
-    int get_nice_k() {
-      int lb = -1, ub = 10000000;
+    LL get_nice_k() {
+      LL lb = 0, ub = 10000000;
       while ( ub - lb > 1 ) {
-        int mid = ( lb + ub ) / 2;
+        LL mid = ( lb + ub ) / 2;
         if ( check(mid) ) {
           ub = mid;
         } else {
@@ -150,7 +152,7 @@ namespace solution {
       return ub;
     }
 
-    bool check( int k ) {
+    bool check( LL k ) {
       for ( char c = 'a'; c <= 'z'; ++ c ) {
         if ( t_cnt[c] * k < s_cnt[c] )
           return false;
@@ -165,37 +167,39 @@ namespace solution {
         cnt[s[i]] ++;
       }
 
-      typedef std::pair <int, char> Entry;
+      typedef std::pair<int, char> Entry;
       typedef std::vector<Entry> Entries;
       Entries E;
       for ( char c = 'a'; c <= 'z'; ++ c ) {
-        if ( cnt[c] > 0 )
+        if ( cnt[c] > 0 ) {
           E.push_back(std::make_pair(cnt[c], c));
+        }
       }
-
       std::sort(E.begin(), E.end(), std::greater<Entry>());
 
       int ne = E.size();
-      int ind = 0;
-      string res = "";
-
-      if ( n < ne )
-        return T_NONE;
-
+      string res;
       int sum = 0;
-      for ( Entries::iterator it_i = E.begin(); it_i != E.end(); ++ it_i ) {
-        int a = (*it_i).first;
-        char c = (*it_i).second;
-        double port = (double)a / ns;
-        int num = max(1, (int)((double)n * port));
-        sum += num;
-        res += string(num, c);
-        ind ++;
+      while ( sum < n ) {
+        bool ok = false;
+        for ( int i = 0; i < ne && sum < n; ++ i ) {
+          char c = E[i].second;
+          if ( cnt[c] > 0 ) {
+            res += c;
+            sum ++;
+            cnt[c] --;
+            ok = true;
+          }
+        }
+        if ( ! ok )
+          break;
       }
 
+      int id = 0;
       while ( sum < n ) {
-        res += E[0].second;
+        res += E[id].second;
         sum ++;
+        id = ( id + 1 ) % ne;
       }
 
       return res;
@@ -222,6 +226,7 @@ namespace solution {
 
     void init() {
       k = NONE;
+      t.clear();
       s_cnt.clear();
       t_cnt.clear();
     }
