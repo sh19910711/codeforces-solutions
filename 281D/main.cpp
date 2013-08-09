@@ -66,24 +66,13 @@ namespace solution {
   typedef std::vector<II> VII;
 }
 
-// @snippet<sh19910711/contest:io/pair.cpp>
-namespace io {
-  template <class A, class B> std::ostream& operator<<( std::ostream& os, const std::pair<A,B>& p ) {
-    return os << "(" << p.first << "," << p.second << ")";
-  }
-  template <class A, class B> std::istream& operator>>( std::istream& is, std::pair<A,B>& p ) {
-    return is >> p.first >> p.second;
-  }
-}
-
 // @snippet<sh19910711/contest:solution/namespace-area.cpp>
 namespace solution {
   // namespaces, types
   using namespace std;
-  using namespace io;
-
-  typedef set<int> Set;
-  typedef set<int, greater<int> > SetRev;
+  typedef std::map <int, int> Map;
+  typedef std::set <int, std::greater<int> > Set;
+  typedef std::set <int, std::less<int> > SetRev;
 }
 
 // @snippet<sh19910711/contest:solution/variables-area.cpp>
@@ -93,10 +82,11 @@ namespace solution {
   // storages
   int n;
   int A[SIZE];
-  II S[SIZE];
 
-  Set P;
-  SetRev P_rev;
+  Map pos_to_value;
+  Map value_to_pos;
+  Set pos;
+  SetRev pos_rev;
 
   int result;
 }
@@ -107,39 +97,41 @@ namespace solution {
   public:
     void solve() {
       normalize();
-      result = get_maximum_xor();
+      sort_a();
+      result = find_maximum_xor();
     }
 
-    int get_maximum_xor() {
+    int find_maximum_xor() {
       int res = 0;
-
       for ( int i = 0; i < n; ++ i ) {
-        int current_value = S[i].first;
-        Set::iterator it_after = P.upper_bound(S[i].second);
-        Set::iterator it_before = P_rev.upper_bound(S[i].second);
-
-        if ( it_after != P.end() ) {
-          int after_value = A[*it_after];
-          res = max(res, current_value ^ after_value);
+        int v = A[i];
+        int p = value_to_pos[v];
+        Set::iterator it_before = pos.upper_bound(p);
+        SetRev::iterator it_after = pos_rev.upper_bound(p);
+        if ( it_before != pos.end() ) {
+          int gv = pos_to_value[*it_before];
+          res = max(res, v ^ gv);
+        }
+        if ( it_after != pos_rev.end() ) {
+          int gv = pos_to_value[*it_after];
+          res = max(res, v ^ gv);
         }
 
-        if ( it_before != P_rev.end() ) {
-          int before_value = A[*it_before];
-          res = max(res, current_value ^ before_value);
-        }
-
-        P.insert(S[i].second);
-        P_rev.insert(S[i].second);
+        pos.insert(p);
+        pos_rev.insert(p);
       }
-
       return res;
     }
-    
+
+    void sort_a() {
+      std::sort(A, A + n, std::greater<int>());
+    }
+
     void normalize() {
       for ( int i = 0; i < n; ++ i ) {
-        S[i] = II(A[i], i);
+        pos_to_value[i] = A[i];
+        value_to_pos[A[i]] = i;
       }
-      sort(S, S + n, greater<II>());
     }
     
   private:
@@ -162,11 +154,13 @@ namespace solution {
     }
 
     void init() {
-      result = -1;
-      P.clear();
-      P_rev.clear();
+      pos_to_value.clear();
+      value_to_pos.clear();
+      pos.clear();
+      pos_rev.clear();
+      result = 0;
     }
-    
+
     bool input() {
       if ( ! ( cin >> n ) )
         return false;
@@ -174,7 +168,7 @@ namespace solution {
         cin >> A[i];
       return true;
     }
-    
+
     void output() {
       cout << result << endl;
     }
@@ -186,8 +180,9 @@ namespace solution {
 }
 
 // @snippet<sh19910711/contest:main.cpp>
+#ifndef __MY_UNIT_TEST__
 int main() {
   return solution::Solution().run();
 }
-
+#endif
 
