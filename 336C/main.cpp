@@ -83,9 +83,9 @@ namespace solution {
   int n;
   LL A[SIZE];
   
+  int max_v;
   int GC[G_SIZE];
   LL G[G_SIZE][SIZE];
-  
   int TC;
   LL T[SIZE];
   
@@ -114,8 +114,8 @@ namespace solution {
   public:
     void solve() {
       find_group();
-      int v = find_v();
-      while ( ( v = find_v() ) != NONE ) {
+      max_v = find_v();
+      for ( int v = max_v; v >= 0; -- v ) {
         generate_t(v);
         generate_b(v);
         if ( BC != NONE )
@@ -140,13 +140,18 @@ namespace solution {
         }
       }
       if ( s.size() ) {
+        LL bv = bit(v) - 1;
+        for ( int i = v + 1; i < max_v; ++ i ) {
+          for ( int j = 0; j < GC[i]; ++ j ) {
+            if ( ( G[i][j] & bv ) == 1 )
+              s.insert(G[i][j]);
+          }
+        }
         BC = 0;
         for ( Set::iterator it_i = s.begin(); it_i != s.end(); ++ it_i ) {
           B[BC ++] = *it_i;
         }
       }
-      else
-        GC[v] = 0;
     }
     
     void generate_t( int v ) {
