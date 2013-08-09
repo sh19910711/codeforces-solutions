@@ -70,22 +70,23 @@ namespace solution {
 namespace solution {
   // namespaces, types
   using namespace std;
-  
+  typedef std::set<int> Set;
 }
 
 // @snippet<sh19910711/contest:solution/variables-area.cpp>
 namespace solution {
   // constant vars
   const int SIZE = 2 * 100000 + 11;
-  const int NONE = -1;
-  const LL MEMO_NONE = std::numeric_limits<LL>::min();
+  const LL NONE = std::numeric_limits<LL>::min() / 10LL;
+  const LL MEMO_NONE = std::numeric_limits<LL>::min() / 5LL;
   // storages
   int n;
   int A[SIZE];
-  
-  LL B[SIZE];
-  bool visited[SIZE][2];
-  LL memo[SIZE][2];
+
+  bool visited[SIZE][3];
+  LL memo[SIZE][3];
+
+  LL results[SIZE];
 }
 
 // @snippet<sh19910711/contest:solution/solver-area.cpp>
@@ -93,39 +94,27 @@ namespace solution {
   class Solver {
   public:
     void solve() {
-      for ( int i = 1; i <= n - 1; ++ i ) {
-        memo[1][0] = MEMO_NONE;
-        visited[1][0] = false;
+      for ( int i = 1; i <= n - 1; i ++ ) {
         A[1] = i;
-        LL ret = rec(1, 0);
-        if ( ret == NONE ) {
-          B[i - 1] = NONE;
-        } else {
-          B[i - 1] = ret;
-        }
+        visited[1][1+1] = false;
+        memo[1][1+1] = MEMO_NONE;
+        results[i - 1] = run(1, 1);
       }
     }
 
-    LL rec( int x, int first ) {
+    LL run( int x, int k ) {
       if ( x <= 0 || x > n )
         return 0;
-
-      if ( memo[x][first] != MEMO_NONE )
-        return memo[x][first];
-
-      if ( visited[x][first] )
-        return memo[x][first] = NONE;
-      visited[x][first] = true;
-
-      if ( first ) {
-        LL ret = rec(x - A[x], 0);
-        return memo[x][first] = ( ret == NONE ? NONE : ret + A[x] );
-      } else {
-        LL ret = rec(x + A[x], 1);
-        return memo[x][first] = ( ret == NONE ? NONE : ret + A[x] );
-      }
-
-      return NONE;
+      LL& res = memo[x][k+1];
+      if ( res != MEMO_NONE )
+        return res;
+      if ( visited[x][k+1] )
+        return res = NONE;
+      visited[x][k+1] = true;
+      LL ret = run(x + k * A[x], -k);
+      if ( ret == NONE )
+        return NONE;
+      return res = ret + A[x];
     }
     
   private:
@@ -146,14 +135,14 @@ namespace solution {
       output();
       return true;
     }
-    
+
     void init() {
-      for ( int i = 0; i < SIZE; ++ i )
-        for ( int j = 0; j < 2; ++ j )
-          visited[i][j] = false;
-      for ( int i = 0; i < SIZE; ++ i )
-        for ( int j = 0; j < 2; ++ j )
+      for ( int i = 0; i < SIZE; ++ i ) {
+        for ( int j = 0; j < 3; ++ j ) {
           memo[i][j] = MEMO_NONE;
+          visited[i][j] = false;
+        }
+      }
     }
 
     bool input() {
@@ -166,10 +155,10 @@ namespace solution {
 
     void output() {
       for ( int i = 0; i < n - 1; ++ i ) {
-        if ( B[i] == NONE ) {
+        if ( results[i] == NONE ) {
           cout << -1 << endl;
         } else {
-          cout << B[i] << endl;
+          cout << results[i] << endl;
         }
       }
     }
@@ -181,7 +170,9 @@ namespace solution {
 }
 
 // @snippet<sh19910711/contest:main.cpp>
+#ifndef __MY_UNIT_TEST__
 int main() {
   return solution::Solution().run();
 }
+#endif
 
