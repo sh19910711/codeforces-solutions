@@ -86,26 +86,9 @@ namespace solution {
   int max_v;
   int GC[G_SIZE];
   LL G[G_SIZE][SIZE];
-  int TC;
-  LL T[SIZE];
   
   int BC;
   LL B[SIZE];
-}
-
-// @snippet<sh19910711/contest:misc/get_binary_string.cpp>
-namespace misc {
-  // @desc 2進表記した文字列を求める
-  template <class T> std::string GetBinaryString( const T& v ) {
-    std::ostringstream oss;
-    for ( int i = 0; i < static_cast<int>(sizeof v) * 8; ++ i ) {
-      int bi = ( v >> i ) & 1;
-      oss << bi;
-    }
-    std::string res = oss.str();
-    std::reverse( res.begin(), res.end() );
-    return res;
-  }
 }
 
 // @snippet<sh19910711/contest:solution/solver-area.cpp>
@@ -114,63 +97,20 @@ namespace solution {
   public:
     void solve() {
       find_group();
-      max_v = find_v();
-      for ( int v = max_v; v >= 0; -- v ) {
-        generate_t(v);
-        generate_b(v);
-        if ( BC != NONE )
-          return;
-      }
-    }
-    
-    void generate_b( int v ) {
-      LL and_sum = bit(G_SIZE) - 1;
-      for ( int i = 0; i < TC; ++ i ) {
-        and_sum &= T[i];
-      }
-      Set s;
-      for ( int i = 0; i < GC[v]; ++ i )
-        s.insert(G[v][i]);
-      for ( int i = 0; i < v - 1; ++ i ) {
-        LL bi = bit(i);
-        if ( and_sum & bi ) {
-          for ( int j = 0; j < GC[i]; ++ j ) {
-            s.erase(G[i][j]);
-          }
-        }
-      }
-      if ( s.size() ) {
-        LL bv = bit(v) - 1;
-        for ( int i = v + 1; i < max_v; ++ i ) {
-          for ( int j = 0; j < GC[i]; ++ j ) {
-            if ( ( G[i][j] & bv ) == 1 )
-              s.insert(G[i][j]);
-          }
-        }
-        BC = 0;
-        for ( Set::iterator it_i = s.begin(); it_i != s.end(); ++ it_i ) {
-          B[BC ++] = *it_i;
-        }
-      }
-    }
-    
-    void generate_t( int v ) {
-      TC = 0;
-      for ( int i = 0; i < GC[v]; ++ i ) {
-        T[TC ++] = G[v][i];
-      }
-    }
-    
-    int find_v() {
-      int res = NONE;
       for ( int i = 0; i < G_SIZE; ++ i ) {
-        if ( GC[i] )
-          res = max(res, i);
+        LL bi = bit(i);
+        LL and_sum = bit(G_SIZE) - 1;
+        for ( int j = 0; j < GC[i]; ++ j )
+          and_sum &= G[i][j];
+        if ( and_sum % bi == 0 ) {
+          BC = GC[i];
+          for ( int j = 0; j < GC[i]; ++ j )
+            B[j] = G[i][j];
+        }
       }
-      return res;
     }
     
-    LL bit( int k ) {
+    LL bit( LL k ) {
       return 1LL << k;
     }
     
