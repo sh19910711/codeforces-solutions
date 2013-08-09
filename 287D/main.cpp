@@ -80,7 +80,6 @@ namespace solution {
   // storages
   int n;
   int P[SIZE];
-
   int offset;
 }
 
@@ -89,26 +88,33 @@ namespace solution {
   class Solver {
   public:
     void solve() {
-      offset = 0;
-      for ( int i = 0; i < n; ++ i )
-        map(i) = i + 1;
-
-      for ( int k = 2; k <= n; ++ k ) {
-        int swapping = map(0);
-        offset += 1;
-
-        for ( int i = 0; i + k - 1 < n; i += k ) {
-          swap(swapping, map(i + k - 1));
-        }
-
-        if ( n % k )
-          map(n - 1) = swapping;
+      init_p();
+      for ( int i = 2; i <= n; ++ i ) {
+        do_shift(i);
       }
-
     }
 
-    int& map( int k ) {
-      return P[(offset + k) % n];
+    void do_shift( int k ) {
+      int swapped = mapping(0);
+      offset = ( offset + 1 + n ) % n;
+      for ( int i = 0; i + k < n; i += k ) {
+        int tmp = mapping(i + k - 1);
+        swap(swapped, mapping(i + k - 1));
+        swapped = tmp;
+      }
+      mapping(n - 1) = swapped;
+    }
+
+    int& mapping( int index ) {
+      index = ( index + offset + n ) % n;
+      return P[index];
+    }
+
+    void init_p() {
+      offset = 0;
+      for ( int i = 0; i < n; ++ i ) {
+        P[i] = i;
+      }
     }
     
   private:
@@ -135,8 +141,9 @@ namespace solution {
     }
 
     void output() {
-      for ( int i = 0; i < n; ++ i )
-        cout << solver.map(i) << " ";
+      for ( int i = 0; i < n; ++ i ) {
+        cout << solver.mapping(i) + 1 << " ";
+      }
       cout << endl;
     }
     
@@ -147,7 +154,9 @@ namespace solution {
 }
 
 // @snippet<sh19910711/contest:main.cpp>
+#ifndef __MY_UNIT_TEST__
 int main() {
   return solution::Solution().run();
 }
+#endif
 
