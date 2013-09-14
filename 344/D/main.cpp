@@ -111,13 +111,14 @@ namespace solution {
     }
 
   protected:
-    static bool check( const String& s ) {
+    static bool check( String s ) {
+      s.erase(std::unique(s.begin(), s.end()), s.end());
       int n = s.size();
       int l = n / 2;
-      String a = s.substr(0, l);
-      String b = s.substr(l);
+      string a = s.substr(0, l);
+      string b = s.substr(l);
       std::reverse(b.begin(), b.end());
-      return a == b;
+      return n % 2 == 0 && a == b;
     }
 
   };
