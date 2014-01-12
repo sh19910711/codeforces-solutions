@@ -135,30 +135,32 @@ namespace solution {
     
   protected:
     static void for_each_query( const InputStorage& in, OutputStorage& out, DataStorage& data ) {
-      Int cnt = 0;      // 生成済みの個数
-      Int seq_cnt = 0;  // 次に格納する要素
-      Int A_next = 0;
-      Int next_index = in.A[A_next ++];
-      for ( int i = 0; i < in.m; ++ i ) {
-        const Int type = in.Q[i];
-        if ( type == 1 ) {
-          cnt += 1;
-          const Int x = in.X[i];
-          if ( cnt == next_index ) {
-            out.seq[seq_cnt ++] = x;
-            next_index = in.A[A_next ++];
+      Int qi = 0;
+      Int generated = 0;
+      Int seq_cnt = 0;
+      for ( int ai = 0; ai < in.n; ++ ai ) {
+        const Int next_index = in.A[ai];
+        while ( generated < next_index ) {
+          const Int type = in.Q[qi];
+          if ( type == 1 ) {
+            const Int x = in.X[qi];
+            qi ++;
+            if ( generated + 1 == next_index ) {
+              out.seq[seq_cnt ++] = x;
+            }
+            generated += 1;
+          } else {
+            const Int l = in.X[qi];
+            const Int c = in.Y[qi];
+            if ( generated < next_index && next_index <= generated + l * c ) {
+              Int offset = next_index - generated - 1;
+              out.seq[seq_cnt ++] = data.sub[offset % l];
+              break;
+            } else {
+              generated += l * c;
+              qi ++;
+            }
           }
-        } else {
-          const Int l = in.X[i];
-          const Int c = in.Y[i];
-          cout << "2: generated = " << cnt << ", next = " << next_index << endl;
-          // 範囲に含まれるかどうか
-          if ( cnt < next_index && next_index <= cnt + l * c ) {
-            Int offset = next_index - cnt;
-            out.seq[seq_cnt ++] = data.sub[offset];
-            next_index = in.A[A_next ++];
-          }
-          cnt += l * c;
         }
       }
     }
