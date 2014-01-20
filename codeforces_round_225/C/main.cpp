@@ -69,6 +69,47 @@ namespace solution {
   };
 }
 
+// @snippet<sh19910711/contest:tree/binary_indexed_tree.cpp>
+namespace tree {
+  template <class T> class BinaryIndexedTree {
+  public:
+    int n;
+    std::vector<T> data;
+    
+    BinaryIndexedTree() {}
+    BinaryIndexedTree( const int& n ): n(n) {
+      init(n);
+    }
+
+    void init( const int& n ) {
+      data = std::vector<T>(n + 1, 0);
+    }
+    
+    T sum( int i ) {
+      if ( i < 0 ) {
+        return 0;
+      }
+      i ++;
+      T res = 0;
+      while ( i > 0 ) { res += data[i]; i -= i & -i; }
+      return res;
+    }
+    
+    void add( int i, const T& x ) {
+      i ++;
+      while ( i <= n ) { data[i] += x; i += i & -i; }
+    }
+    
+    T get( const int& x ) {
+      return sum(x) - sum(x - 1);
+    }
+    
+    void set( const int& x, const T& new_value ) {
+      add(x, new_value - get(x));
+    }
+  };
+}
+
 // @snippet<sh19910711/contest:solution/typedef.cpp>
 namespace solution {
   using namespace std;
@@ -92,6 +133,7 @@ namespace solution {
   // namespaces, types
   typedef std::pair <Int, Int> II;
   typedef std::set <int> Set;
+  typedef tree::BinaryIndexedTree<int> BIT;
 }
 
 // @snippet<sh19910711/contest:solution/storages-area.cpp>
@@ -139,14 +181,14 @@ namespace solution {
         }
       }
       std::sort(list, list + N);
-
-      Set used_left;
-      Set used_right;
+      
+      BIT tree_left(SIZE);
+      BIT tree_right(SIZE);
       for ( int i = 0; i < N; ++ i ) {
         if ( A[i] == 0 ) {
-          used_left.insert(i);
+          tree_left.add(i, 1);
         } else {
-          used_right.insert(i);
+          tree_right.add(i, 1);
         }
       }
 
@@ -155,18 +197,13 @@ namespace solution {
         const Int& id = list[i].second;
         const Int& dist = list[i].first;
         const Int& dir = A[id];
-        if ( dir == 0 ) {
-          Int cnt_right = used_left.size() - std::distance(used_left.begin(), used_left.lower_bound(id)) - 1;
-          Int cnt_left = std::distance(used_right.begin(), used_right.lower_bound(id));
-          res += cnt_left + cnt_right;
-          used_left.erase(id);
-        } else {
-          Int cnt_right = used_left.size() - std::distance(used_left.begin(), used_left.lower_bound(id));
-          Int cnt_left = std::distance(used_right.begin(), used_right.lower_bound(id));
-          res += cnt_left + cnt_right;
-          used_right.erase(id);
-        }
-        // Int cnt_left = std::distance(used_right.begin(), used_right.lower_bound(id));
+        // L R[0, i)
+        Int cnt_left = tree_right.sum(id - 1);
+        // R L(i, N - 1]
+        Int cnt_right = tree_left.sum(N - 1) - tree_left.sum(id);
+        res += cnt_left + cnt_right;
+        tree_left.set(id, 0);
+        tree_right.set(id, 0);
       }
       return res;
     }
@@ -188,7 +225,7 @@ namespace solution {
       this->output(solver.solve(this->storages->in, this->storages->out, this->storages->data));
       return true;
     }
-
+    
     bool input( InputStorage& in ) {
       if ( ! ( std::cin >> in.N ) ) {
         return false;
@@ -198,7 +235,7 @@ namespace solution {
       }
       return true;
     }
-
+    
     void output( const OutputStorage& out ) const {
       std::cout << out.result << std::endl;
     }
@@ -216,4 +253,5 @@ int main() {
   return solution::Solution(&solution::global_storages).run();
 }
 #endif
+
 
