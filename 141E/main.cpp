@@ -168,19 +168,61 @@ namespace solution {
         return false;
       }
       out.indexes.clear();
-      data.uf.init(in.N);
       std::fill(data.used, data.used + SIZE, false);
+
+      Int needs = ( in.N - 1 ) / 2;
+
+      data.uf.init(in.N);
+      for ( int i = 0; i < in.M; ++ i ) {
+        if ( in.edges[i].type == ELF ) {
+          data.uf.merge(in.edges[i].from, in.edges[i].to);
+        }
+      }
+      Indexes ret2 = generate_graph_2(in.M, in.edges, data.uf, data.used);
+
+      data.uf.init(in.N);
+      for ( int i = 0; i < ret2.size(); ++ i ) {
+        data.uf.merge(in.edges[ret2[i]].from, in.edges[ret2[i]].to);
+      }
+      if ( ret2.size() > needs ) {
+        return false;
+      }
+
+      Int remains = needs - ret2.size();
+      data.uf.init(in.N);
+      Indexes ret3 = generate_graph_3(in.M, in.edges, data.uf, data.used, remains);
       Indexes ret1 = generate_graph_1(in.M, in.edges, data.uf, data.used);
       out.indexes.insert(out.indexes.end(), ret1.begin(), ret1.end());
-      Indexes ret2 = generate_graph_2(in.M, in.edges, data.uf, data.used);
       out.indexes.insert(out.indexes.end(), ret2.begin(), ret2.end());
-      if ( ret1.size() != in.N / 2 ) {
+      out.indexes.insert(out.indexes.end(), ret3.begin(), ret3.end());
+
+      if ( ret1.size() != needs ) {
         return false;
       }
-      if ( ret2.size() != in.N / 2 ) {
-        return false;
-      }
+
       return out.indexes.size() == in.N - 1;
+    }
+
+    static Indexes generate_graph_3( const Int& m, const Edge edges[SIZE], UnionFind& uf, bool used[SIZE], int remains ) {
+      Indexes res;
+      for ( int i = 0; i < m; ++ i ) {
+        if ( remains <= 0 ) {
+          continue;
+        }
+        if ( used[i] ) {
+          continue;
+        }
+        if ( edges[i].type != SANTA ) {
+          continue;
+        }
+        if ( ! uf.same(edges[i].from, edges[i].to) ) {
+          uf.merge(edges[i].from, edges[i].to);
+          used[i] = true;
+          res.push_back(i);
+          remains --;
+        }
+      }
+      return res;
     }
 
     static Indexes generate_graph_2( const Int& m, const Edge edges[SIZE], UnionFind& uf, bool used[SIZE] ) {
@@ -189,7 +231,7 @@ namespace solution {
         if ( used[i] ) {
           continue;
         }
-        if ( edges[i].type != ELF ) {
+        if ( edges[i].type != SANTA ) {
           continue;
         }
         if ( ! uf.same(edges[i].from, edges[i].to) ) {
@@ -207,7 +249,7 @@ namespace solution {
         if ( used[i] ) {
           continue;
         }
-        if ( edges[i].type != SANTA ) {
+        if ( edges[i].type != ELF ) {
           continue;
         }
         if ( ! uf.same(edges[i].from, edges[i].to) ) {
@@ -266,8 +308,12 @@ namespace solution {
     Storages* storages;
 
     bool input_edge( Edge& edge ) {
+      Int from;
+      Int to;
       string type;
-      std::cin >> edge.from >> edge.to >> type;
+      std::cin >> from >> to >> type;
+      edge.from = from - 1;
+      edge.to = to - 1;
       if ( type == "S" ) {
         edge.type = ELF;
       } else {
