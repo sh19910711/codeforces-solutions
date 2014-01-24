@@ -121,27 +121,28 @@ namespace solution {
     Double dp[BIT_SIZE];
 
     Double run() {
-      std::fill(dp, dp + BIT_SIZE, std::numeric_limits<Double>::min());
-      dp[0] = in->L;
-      Double res = 0.0;
+      Double L = in->L;
+      Double R = in->R;
+      std::fill(dp, dp + BIT_SIZE, L);
       Int n = in->N;
       Int bit_n = 1 << n;
       for ( Int s = 0; s < bit_n; ++ s ) {
         for ( Int lid = 0; lid < n; ++ lid ) {
           if ( is_visited(s, lid) )
             continue;
+
           Double x = in->X[lid];
           Double y = in->Y[lid];
           Double sx = dp[s];
-          Double a = in->A[lid] * M_PI / 180.0;
-          Double b = std::atan((sx - x) / y);
+          Double a = (Double)in->A[lid] * M_PI / 180.0;
+          Double b = std::atan2(sx - x, y);
           Double tx = y * tan(a + b) + x;
 
           Int next_s = s | ( 1 << lid );
           dp[next_s] = std::max(dp[next_s], tx);
         }
       }
-      return std::min((Double)in->R - in->L, *std::max_element(dp, dp + BIT_SIZE) - in->L);
+      return std::min(R - L, *std::max_element(dp, dp + BIT_SIZE) - L);
     }
 
     bool is_visited( Int s, Int id ) {
