@@ -173,8 +173,7 @@ namespace solution {
       return true;
     }
     void output( const OutputStorage* out ) {
-      // std::printf("%.10Lf\n", out->result);
-      std::cout << out->result << std::endl;
+      std::printf("%.8Lf\n", out->result);
     }
   };
 }
