@@ -135,7 +135,7 @@ namespace solution {
           Double x = in->X[lid];
           Double y = in->Y[lid];
           Double sx = dp[s];
-          if ( std::abs(x - sx) < 1e-3 ) {
+          if ( std::abs(x - sx) <= 1e-5 ) {
             dp[next_s] = std::numeric_limits<int>::max();
           } else {
             Double a = (Double)in->A[lid] * M_PI / 180.0;
