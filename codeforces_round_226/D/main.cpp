@@ -137,7 +137,7 @@ namespace solution {
           Double b = std::atan((sx - x) / y);
           Double tx = y * tan(a + b) + x;
 
-          Int next_s = s & ( 1 << lid );
+          Int next_s = s | ( 1 << lid );
           dp[next_s] = std::max(dp[next_s], tx);
         }
       }
