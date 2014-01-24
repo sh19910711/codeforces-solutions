@@ -131,15 +131,20 @@ namespace solution {
           if ( is_visited(s, lid) )
             continue;
 
+          Int next_s = s | ( 1 << lid );
           Double x = in->X[lid];
           Double y = in->Y[lid];
           Double sx = dp[s];
-          Double a = (Double)in->A[lid] * M_PI / 180.0;
-          Double b = std::atan2(sx - x, y);
-          Double tx = y * tan(a + b) + x;
+          if ( std::abs(x - sx) < 1e-3 ) {
+            dp[next_s] = std::numeric_limits<int>::max();
+          } else {
+            Double a = (Double)in->A[lid] * M_PI / 180.0;
+            Double b = std::atan2(sx - x, y);
+            Double tx = y * tan(a + b) + x;
 
-          Int next_s = s | ( 1 << lid );
-          dp[next_s] = std::max(dp[next_s], tx);
+            Int next_s = s | ( 1 << lid );
+            dp[next_s] = std::max(dp[next_s], tx);
+          }
         }
       }
       return std::min(R - L, *std::max_element(dp, dp + BIT_SIZE) - L);
