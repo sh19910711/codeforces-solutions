@@ -131,6 +131,7 @@ namespace solution {
           if ( is_visited(s, lid) )
             continue;
 
+          cout << "dp[s] = " << dp[s] << endl;
           Int next_s = s | ( 1 << lid );
           Double x = in->X[lid];
           Double y = in->Y[lid];
