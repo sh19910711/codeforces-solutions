@@ -134,9 +134,11 @@ namespace solution {
           tmp.insert(p);
         while ( ! tmp.empty() ) {
           auto p = *tmp.begin();
+          Int x = std::get<0>(p);
+          Int id = std::get<2>(p);
           tmp.erase(p);
-          if ( std::get<0>(p) >= N - r ) {
-            A[AC ++] = std::get<2>(p);
+          if ( x >= N - r ) {
+            A[AC ++] = id;
             break;
           }
         }
