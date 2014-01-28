@@ -135,7 +135,6 @@ namespace solution {
         while ( ! tmp.empty() ) {
           auto p = *tmp.begin();
           tmp.erase(p);
-          // cout << get<0>(p) << ", " << get<1>(p) << ", " << get<2>(p) << endl;
           if ( std::get<1>(p) >= N - r ) {
             A[AC ++] = std::get<2>(p);
             break;
@@ -162,7 +161,7 @@ namespace solution {
       in->S.clear();
       for ( int i = 0; i < in->M; ++ i ) {
         Person p;
-        std::cin >> std::get<1>(p) >> std::get<0>(p);
+        std::cin >> std::get<0>(p) >> std::get<1>(p);
         std::get<2>(p) = i + 1;
         in->S.insert(p);
       }
