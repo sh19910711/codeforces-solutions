@@ -161,7 +161,7 @@ namespace solution {
         return false;
       for ( int i = 0; i < in->M; ++ i ) {
         Person p;
-        std::cin >> std::get<0>(p) >> std::get<1>(p);
+        std::cin >> std::get<1>(p) >> std::get<0>(p);
         std::get<2>(p) = i + 1;
         in->S.insert(p);
       }
