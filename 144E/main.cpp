@@ -146,7 +146,6 @@ namespace solution {
     }
 
     void generate_sets( const Set& s ) {
-      std::for_each(begin(S), end(S), []( Set& a ){ a.clear(); });
       for ( auto p : s ) {
         S[std::get<1>(p)].insert(p);
       }
