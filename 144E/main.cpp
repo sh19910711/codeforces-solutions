@@ -159,6 +159,7 @@ namespace solution {
     bool input( InputStorage* in ) {
       if ( ! ( std::cin >> in->N >> in->M ) )
         return false;
+      in->S.clear();
       for ( int i = 0; i < in->M; ++ i ) {
         Person p;
         std::cin >> std::get<1>(p) >> std::get<0>(p);
