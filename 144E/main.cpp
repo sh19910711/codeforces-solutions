@@ -137,7 +137,7 @@ namespace solution {
           Int x = std::get<0>(p);
           Int id = std::get<2>(p);
           tmp.erase(p);
-          if ( x >= N - r ) {
+          if ( x > N - r ) {
             A[AC ++] = id;
             break;
           }
