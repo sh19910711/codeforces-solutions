@@ -135,7 +135,7 @@ namespace solution {
         while ( ! tmp.empty() ) {
           auto p = *tmp.begin();
           tmp.erase(p);
-          if ( std::get<1>(p) >= N - r ) {
+          if ( std::get<0>(p) >= N - r ) {
             A[AC ++] = std::get<2>(p);
             break;
           }
