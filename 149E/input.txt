@@ -1,0 +1,8 @@
+ABCBABA
+2
+BAAB
+ABBA
+
+ABBA
+1
+ABA
