@@ -208,8 +208,8 @@ namespace solution {
       NB = std::distance(begin(B), std::unique(begin(B), begin(B) + NB));
       
       // count lucky only lucky seq
-      for ( auto cnt : cnt ) {
-        std::fill(begin(cnt), end(cnt), 0);
+      for ( auto x : cnt ) {
+        std::fill(begin(x), end(x), 0);
       }
       cnt[0][0] = 1;
       for ( auto i = 0; i <= NB; ++ i ) {
