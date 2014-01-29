@@ -228,9 +228,11 @@ namespace solution {
         res += calc_comb(unlucky, K);
         res %= MOD;
       }
-      for ( auto i = 1; i <= K; ++ i ) {
+      for ( Int i = 1; i <= K; ++ i ) {
         if ( unlucky >= K - i ) {
-          res += cnt[NB][i] * calc_comb(unlucky, K - i);
+          if ( i <= NB ) {
+            res += cnt[NB][std::min(NB, i)] * calc_comb(unlucky, K - i);
+          }
           res %= MOD;
         }
       }
