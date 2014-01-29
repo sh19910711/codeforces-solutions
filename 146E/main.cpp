@@ -83,8 +83,10 @@ namespace math {
     long long data[SIZE];
     ModFact() {
       data[0] = data[1] = 1;
-      for ( int i = 2; i < SIZE; ++ i )
+      for ( int i = 2; i < SIZE; ++ i ) {
         data[i] = data[i - 1] * i;
+        data[i] %= MOD;
+      }
     }
   };
 }
@@ -173,7 +175,7 @@ namespace solution {
     Int run( const InputStorage* in ) {
       K = in->K;
       NA = in->N;
-      A = std::move(in->A);
+      A = in->A;
       
       std::sort(begin(A), begin(A) + NA);
       
@@ -191,7 +193,7 @@ namespace solution {
         if ( check_lucky(A[i]) ) {
           auto b_id = NB ++;
           B[b_id]  = A[i];
-          BC[b_id] = 0;
+          BC[b_id] = 1;
           if ( i + 1 < NA && A[i] == A[i + 1] ) {
             auto j = i + 1;
             for ( ; j < NA; ++ j ) {
@@ -208,23 +210,32 @@ namespace solution {
       NB = std::distance(begin(B), std::unique(begin(B), begin(B) + NB));
       
       // count lucky only lucky seq
-      for ( auto x : cnt ) {
-        std::fill(begin(x), end(x), 0);
+      for ( int i = 0; i < MAX_LUCKY_NUMBERS; ++ i ) {
+        std::fill(begin(cnt[i]), end(cnt[i]), 0);
       }
       cnt[0][0] = 1;
-      for ( auto i = 0; i <= NB; ++ i ) {
-        for ( auto j = 0; j <= K; ++ j ) {
-          cnt[i + 1][j + 1] += cnt[i][j] * BC[i];
-          cnt[i + 1][j + 0] += cnt[i][j] * BC[i];
+      for ( auto i = 0; i < NB; ++ i ) {
+        for ( auto j = 0; j <= i; ++ j ) {
+          cnt[i + 1][j + 1] += ( cnt[i][j] * BC[i] ) % MOD;
+          cnt[i + 1][j + 1] %= MOD;
+          cnt[i + 1][j + 0] += cnt[i][j];
+          cnt[i + 1][j + 0] %= MOD;
         }
       }
       
       Int res = 0;
-      for ( auto i = 0; i <= K; ++ i ) {
-        res += cnt[NB][i] * calc_comb(unlucky, K - i);
+      if ( unlucky >= K ) {
+        res += calc_comb(unlucky, K);
         res %= MOD;
       }
-      return res;
+      for ( auto i = 1; i <= K; ++ i ) {
+        if ( unlucky >= K - i ) {
+          res += cnt[NB][i] * calc_comb(unlucky, K - i);
+          res %= MOD;
+        }
+      }
+
+      return res % MOD;
     }
     
     Int calc_comb( const Int& N, const Int& R ) {
