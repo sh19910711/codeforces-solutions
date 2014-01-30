@@ -82,6 +82,9 @@ namespace solution {
   };
 }
 
+#include <memory>
+#include <array>
+
 // @snippet<sh19910711/contest-base:solution/typedef.cpp>
 namespace solution {
   using namespace std;
@@ -140,44 +143,50 @@ namespace solution {
   enum EventType {EVENT_TYPE_BUS, EVENT_TYPE_PERSON};
   typedef std::tuple<Int, Int, Int> Event;
   typedef std::set<Event> Events;
+  typedef std::unique_ptr<Events> EventsPointer;
   enum BusIndex {BUS_TIME, BUS_ID};
   typedef std::tuple<Int, Int> Bus;
   typedef std::set<Bus> Buses;
+  typedef std::array<Buses, TREE_SIZE> BusesArray;
+  typedef std::unique_ptr<BusesArray> BusesPointers;
   typedef std::map<Int, Int> Pos;
-
-  Events events;
-  Buses buses[TREE_SIZE];
-  Pos pos;
-  Int pos_cnt;
-  Int result[SIZE];
-  Int result_time[SIZE];
 
   struct Search: InputStorage {
     Search() {}
     Search( const InputStorage* p ) { InputStorage* self = this; *self = *p; }
 
+    EventsPointer events;
+    BusesPointers buses;
+    Pos pos;
+    Int pos_cnt;
+    Int result[SIZE];
+    Int result_time[SIZE];
+
     void search() {
+      events = EventsPointer(new Events);
+      buses = BusesPointers(new BusesArray);
+
       init_pos();
       init_events();
       init_buses();
       std::fill(begin(result), end(result), NONE);
       std::fill(begin(result_time), end(result_time), INF);
 
-      for ( auto event : events ) {
+      for ( auto event : *events ) {
         const auto& type = std::get<EVENT_TYPE>(event);
         const auto& cur_pos = std::get<EVENT_POS>(event);
         if ( type == EVENT_TYPE_BUS ) {
           const auto& id = std::get<EVENT_TYPE_ID>(event);
           Int p = pos[F[id]];
           while ( p > 0 ) {
-            buses[p].insert(Bus(T[id], id));
+            (*buses)[p].insert(Bus(T[id], id));
             p -= p & -p;
           }
         } else if ( type == EVENT_TYPE_PERSON ) {
           const auto& id = std::get<EVENT_TYPE_ID>(event);
           Int p = pos[R[id]];
           while ( p < TREE_SIZE ) {
-            const auto& bus = buses[p];
+            const auto& bus = (*buses)[p];
             const auto& it_ret = bus.lower_bound(Bus(B[id], -1));
             if ( it_ret != end(bus) ) {
               auto bus_id = std::get<BUS_ID>(*it_ret);
@@ -210,17 +219,17 @@ namespace solution {
     }
 
     void init_buses() {
-      for ( auto bus : buses )
-        bus.clear();
+      for ( auto item : *buses )
+        item.clear();
     }
 
     void init_events() {
-      events.clear();
+      events->clear();
       for ( auto i = 0; i < N; ++ i ) {
-        events.insert(Event(pos[S[i]], EVENT_TYPE_BUS, i));
+        events->insert(Event(pos[S[i]], EVENT_TYPE_BUS, i));
       }
       for ( auto i = 0; i < M; ++ i ) {
-        events.insert(Event(pos[L[i]], EVENT_TYPE_PERSON, i));
+        events->insert(Event(pos[L[i]], EVENT_TYPE_PERSON, i));
       }
     }
   };
@@ -231,7 +240,7 @@ namespace solution {
       search = Search(in);
       out->M = in->M;
       search.search();
-      std::copy(begin(result), end(result), begin(out->result));
+      std::copy(begin(search.result), end(search.result), begin(out->result));
       return out;
     }
   };
