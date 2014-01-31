@@ -104,7 +104,8 @@ namespace solution {
   // constants
   const Int SIZE = 1000000 + 11;
   const Int NONE = -1;
-  const Int MAX_A = 4 * 1000000 + 11;
+  const Int BIT_SIZE = 22;
+  const Int MAX_A = 1 << BIT_SIZE;
 }
 
 // @snippet<sh19910711/contest-base:solution/template-namespaces.cpp>
@@ -114,6 +115,7 @@ namespace solution {
   using namespace utils;
   typedef std::array<Int, SIZE> IntArray;
   typedef std::array<bool, MAX_A> BoolArray;
+  typedef std::array<Int, MAX_A> Prevs;
 }
 
 // @snippet<sh19910711/contest-base:solution/template-storage.cpp>
@@ -135,15 +137,40 @@ namespace solution {
   IntArray B;
   Int max_a;
   BoolArray E;
+  Prevs prevs;
 
   struct Search {
     void init() {
-      fill(E, MAX_A, false);
+      init_max_a();
+      init_e();
+    }
+
+    void init_max_a() {
       max_a = 0;
       for ( auto i = 0; i < in->N; ++ i ) {
-        Int a = in->A[i];
+        auto a = in->A[i];
         max_a = std::max(max_a, a);
+      }
+    }
+
+    void init_e() {
+      fill(E, MAX_A, false);
+      fill(prevs, MAX_A, NONE);
+      for ( auto i = 0; i < in->N; ++ i ) {
+        auto a = in->A[i];
         E[a] = true;
+        prevs[a] = i;
+      }
+      for ( auto i = 0; i < MAX_A; ++ i ) {
+        if ( ! E[i] )
+          continue;
+        for ( auto j = 0; j < BIT_SIZE; ++ j ) {
+          auto next_i = i;
+          next_i |= 1 << j;
+          E[next_i] = true;
+          if ( prevs[next_i] == NONE )
+            prevs[next_i] = prevs[i];
+        }
       }
     }
 
@@ -155,9 +182,11 @@ namespace solution {
     }
 
     Int find_number( const Int& a ) {
-      for ( auto i = 0; i < MAX_A; ++ i ) {
-        if ( ( a & i ) == 0 && E[i] )
-          return i;
+      Int t = a ^ ( ( 1 << BIT_SIZE ) - 1 );
+      // cout << "a: " << a << ", t = " << t << ", t&a = " << (t&a) << endl;
+      if ( E[t] ) {
+        // cout << "prevs[t] = " << prevs[t] << endl;
+        return in->A[prevs[t]];
       }
       return NONE;
     }
