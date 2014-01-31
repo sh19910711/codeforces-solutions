@@ -223,6 +223,10 @@ namespace solution {
 
 
   struct Matching {
+    enum OrderIndex {ORDER_COST, ORDER_SHOE_ID};
+    typedef std::tuple<Int, Int> Order;
+    typedef std::array<Order, SIZE> Orders;
+
     const Int MATCH_NONE = -1;
 
     const Graph* G;
@@ -230,13 +234,15 @@ namespace solution {
     IntArray match;
     BoolArray used;
 
+    Orders orders;
+
     Int customers;
     IntArray A;
     IntArray B;
 
     void init() {
       v_num = in->N + in->M;
-      std::cout << "@Matching#init 1" << std::endl;
+      // std::cout << "@Matching#init 1" << std::endl;
       std::fill(begin(match), end(match), MATCH_NONE);
       // TODO: fill(match, MATCH_NONE);
     }
@@ -260,7 +266,14 @@ namespace solution {
 
     Int do_bipartite_matching() {
       Int res = 0;
-      for ( auto v = 0; v < in->N; ++ v ) {
+
+      for ( auto i = 0; i < in->N; ++ i ) {
+        orders[i] = Order {in->C[i], i};
+      }
+      std::sort(begin(orders), begin(orders) + in->N, std::greater<Order>());
+
+      for ( auto i = 0; i < in->N; ++ i ) {
+        auto v = std::get<ORDER_SHOE_ID>(orders[i]);
         if ( match[v] == MATCH_NONE ) {
           fill(used, false);
           if ( dfs(v) )
