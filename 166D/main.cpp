@@ -268,18 +268,19 @@ namespace solution {
       Int res = 0;
 
       for ( auto i = 0; i < in->N; ++ i ) {
-        orders[i] = Order {in->C[i], i};
+        orders[i] = Order {in->C[i], in->N - i};
       }
       std::sort(begin(orders), begin(orders) + in->N, std::greater<Order>());
 
       for ( auto i = 0; i < in->N; ++ i ) {
-        auto v = std::get<ORDER_SHOE_ID>(orders[i]);
+        auto v = in->N - std::get<ORDER_SHOE_ID>(orders[i]);
         if ( match[v] == MATCH_NONE ) {
           fill(used, false);
           if ( dfs(v) )
             res ++;
         }
       }
+      // for ( auto i = 0; i < v_num; ++ i ) { cout << i << ": " << match[i] << endl; }
       return res;
     }
 
