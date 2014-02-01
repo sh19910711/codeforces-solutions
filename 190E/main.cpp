@@ -141,83 +141,94 @@ namespace solution {
 // @snippet<sh19910711/contest-base:solution/template-solver-area.cpp>
 namespace solution {
   struct Find {
-    typedef std::queue<Int> Queue;
-    typedef std::vector<Int> GraphVertices;
-    typedef std::array<GraphVertices, MAX_N> Graph;
-    typedef std::array<bool, MAX_N> Used;
+    typedef std::array<Int, MAX_N> IntArray;
+    typedef std::array<bool, MAX_N> BoolArray;
+    typedef std::vector<Int> Vertices;
+    typedef std::array<Vertices, MAX_N> AdjacentList;
+    typedef std::queue <Int> Queue;
+
     Int groups_cnt;
     Groups groups;
-    Graph G;
-    Graph G_inv;
-    Used used;
+
+    AdjacentList G;
+    IntArray D;
+    AdjacentList cand;
+    BoolArray used;
+    IntArray L;
+    IntArray R;
 
     void init() {
       groups_cnt = 0;
+      for ( auto& g : groups ) g.clear();
       init_graph();
-      for ( auto& v : used )
-        v = false;
+      for ( auto& u : used ) u = false;
+      for ( auto i = 0; i <= in->N; ++ i ) {
+        L[i] = i - 1;
+        R[i] = i + 1;
+      }
     }
 
     void init_graph() {
+      for ( auto& g : G ) g.clear();
+      for ( auto& d : D ) d = 0;
       for ( auto i = 0; i < in->M; ++ i ) {
-        auto u = in->A[i] - 1;
-        auto v = in->B[i] - 1;
-        G[u].push_back(v);
-        G[v].push_back(u);
+        auto a = in->A[i] - 1;
+        auto b = in->B[i] - 1;
+        G[a].push_back(b);
+        G[b].push_back(a);
+        D[a] ++;
+        D[b] ++;
       }
-      for ( auto& g : G ) {
-        std::sort(begin(g), end(g));
+      for ( auto i = 0; i < in->N; ++ i ) {
+        std::sort(begin(G[i]), end(G[i]));
       }
-      for ( auto v = 0; v < in->N; ++ v ) {
-        auto k = 0;
-        auto len = G[v].size();
-        for ( auto i = v + 1; i < in->N; ++ i ) {
-          // G[v][k] < i
-          // cout << "  i = " << i << ", k = " << k << endl;
-          if ( k >= len ) {
-            G_inv[v].push_back(i);
-            G_inv[i].push_back(v);
-          } else {
-            while ( k < len && G[v][k] < i )
-              k ++;
-            // if ( k < len ) cout << "    " << i << " vs " << G[v][k] << endl;
-            // push if G[v][k] != i
-            if ( k < len && G[v][k] != i ) {
-              G_inv[v].push_back(i);
-              G_inv[i].push_back(v);
-            } else if ( k < len ) {
-              k ++;
-            }
-          }
-        }
+      for ( auto& c : cand ) c.clear();
+      for ( auto i = 0; i < in->N; ++ i ) {
+        cand[D[i]].push_back(i);
       }
     }
 
     void find() {
-      Int components = 0;
       for ( auto i = 0; i < in->N; ++ i ) {
-        if ( ! used[i] ) {
-          search(i, components);
-          components ++;
+        for ( auto v : cand[i] ) {
+          if ( used[v] ) 
+            continue;
+          search(v);
+          groups_cnt ++;
         }
       }
-      groups_cnt = components;
     }
 
-    void search( const Int& start, const Int& group_id ) {
-      // cout << "start: " << start << ", gid = " << group_id << endl;
+    void remove( const Int& x ) {
+      // x-1, x, x+1 -> x-1, x+1
+      used[x - 1] = true;
+      auto l = L[x];
+      auto r = R[x];
+      L[r] = l;
+      R[l] = r;
+    }
+
+    void print_r() {
+      for ( int i = 0; i <= in->N; ++ i )
+        cout << i << ": " << L[i] << " - " << R[i] << endl;
+      cout << endl;
+    }
+
+    void search( const Int& start ) {
       Queue Q;
-      used[start] = true;
       Q.push(start);
-      while ( ! ( Q.empty() ) ) {
-        Int v = Q.front();
+      groups[groups_cnt].push_back(start);
+      remove(start + 1);
+
+      while ( ! Q.empty() ) {
+        const Int& v = Q.front();
         Q.pop();
-        groups[group_id].push_back(v);
-        for ( auto u : G_inv[v] ) {
-          //        cout << u << " -> " << v << endl;
-          if ( ! used[u] ) {
-            used[u] = true;
+        for ( auto t = R[0]; t <= in->N; t = R[t] ) {
+          auto u = t - 1;
+          if ( ! std::binary_search(begin(G[v]), end(G[v]), u) ) {
             Q.push(u);
+            groups[groups_cnt].push_back(u);
+            remove(t);
           }
         }
       }
@@ -230,16 +241,7 @@ namespace solution {
 
   struct Solver: SolverInterface {
     const OutputStorage* solve( const InputStorage* in, OutputStorage* out ) {
-      init_groups(out);
-      // cout << ( in->N * ( in->N - 1 ) / 2 ) << " - " << ( in->M ) << " > " << in->N << endl;
-      if ( false && in->N * ( in->N - 1 ) / 2 - in->M > in->N ) {
-        out->groups_cnt = 1;
-        for ( auto i = 0; i < in->N; ++ i ) {
-          out->groups[0].push_back(i);
-        }
-        return out;
-      }
-
+      init_groups(out); 
       auto find = FindPointer(new Find(in));
       find->find();
       out->groups_cnt = find->groups_cnt;
