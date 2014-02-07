@@ -195,30 +195,6 @@ namespace solution {
               best_K[2] = mid;
             }
           }
-          continue;
-          // std::cout << k3 << ", " << k4 << ", " << k5 << std::endl;
-          Int lb = 0;
-          Int ub = in->S + 1;
-
-          while ( ub - lb > 1 ) {
-            Int mid = ( lb + ub ) * 0.5;
-            auto sum = get_sum(k3, k4, mid);
-            if ( sum <= in->S ) {
-              // std::cout << "mid = " << mid << ": " << k3 << ", " << k4 << ", " << mid << ", sum = " << sum << std::endl;
-              if ( sum == in->S ) {
-                auto ret = f(k3, k4, mid);
-                if ( ret < best_f ) {
-                  best_f = ret;
-                  best_K[0] = k3;
-                  best_K[1] = k4;
-                  best_K[2] = mid;
-                }
-              }
-              lb = mid;
-            } else {
-              ub = mid;
-            }
-          }
         }
       }
     }
