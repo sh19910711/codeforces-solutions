@@ -1,0 +1,9 @@
+2
+AB
+BA
+3
+AAB
+CAA
+4
+AAAA
+AAAB
