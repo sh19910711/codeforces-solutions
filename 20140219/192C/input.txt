@@ -1,0 +1,13 @@
+3
+abc
+ca
+cba
+4
+vvp
+vvp
+dam
+vvp
+3
+ab
+c
+def
