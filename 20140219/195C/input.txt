@@ -1,0 +1,33 @@
+8
+try
+    try
+        throw ( AE ) 
+    catch ( BE, "BE in line 3")
+
+    try
+    catch(AE, "AE in line 5") 
+catch(AE,"AE somewhere")
+8
+try
+    try
+        throw ( AE ) 
+    catch ( AE, "AE in line 3")
+
+    try
+    catch(BE, "BE in line 5") 
+catch(AE,"AE somewhere")
+8
+try
+    try
+        throw ( CE ) 
+    catch ( BE, "BE in line 3")
+
+    try
+    catch(AE, "AE in line 5") 
+catch(AE,"AE somewhere")
+5
+ try  
+ try 
+  catch ( gnAEZNTt,  "i5 tAC8ktUdeX")  
+  throw(   gnAEZNTt    ) 
+catch  ( gnAEZNTt, "g1cN" )  
