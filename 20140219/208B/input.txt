@@ -1,0 +1,8 @@
+4
+2S 2S 2C 2C
+2
+3S 2C
+5
+AD 5S KH AH AS
+5
+AD 5S KH AH JS
