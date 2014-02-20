@@ -108,12 +108,14 @@ namespace solution {
         }
         for ( auto j = W - 1; j >= 0; -- j ) {
           if ( cnt < n ) {
-            if ( i > 0 && out->S[i - 1][j] == "01" ) {
-              cnt ++;
-              out->S[i][j] = "10";
-            } else if ( i > 0 && out->S[i - 1][j] == "10" ) {
-              cnt ++;
-              out->S[i][j] = "01";
+            if ( out->S[i][j] == "00" ) {
+              if ( i > 0 && out->S[i - 1][j] == "01" ) {
+                cnt ++;
+                out->S[i][j] = "10";
+              } else if ( i > 0 && out->S[i - 1][j] == "10" ) {
+                cnt ++;
+                out->S[i][j] = "01";
+              }
             }
           }
         }
@@ -121,15 +123,17 @@ namespace solution {
       for ( auto i = 0; i < H; ++ i ) {
         for ( auto j = W - 1; j >= 0; -- j ) {
           if ( cnt < n ) {
-            if ( i > 0 && out->S[i - 1][j] == "01" ) {
-              cnt ++;
-              out->S[i][j] = "10";
-            } else if ( i > 0 && out->S[i - 1][j] == "10" ) {
-              cnt ++;
-              out->S[i][j] = "01";
-            } else if ( out->S[i][j] == "00" ) {
-              cnt ++;
-              out->S[i][j] = "01";
+            if ( out->S[i][j] == "00" ) {
+              if ( i > 0 && out->S[i - 1][j] == "01" ) {
+                cnt ++;
+                out->S[i][j] = "10";
+              } else if ( i > 0 && out->S[i - 1][j] == "10" ) {
+                cnt ++;
+                out->S[i][j] = "01";
+              } else if ( out->S[i][j] == "00" ) {
+                cnt ++;
+                out->S[i][j] = "01";
+              }
             }
           }
         }
