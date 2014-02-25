@@ -95,19 +95,21 @@ namespace solution {
 
     Int get_min() {
       cnt[0][0] = cnt[0][1] = 0;
-      for ( auto i = 0; i <= n; ++ i ) {
+      for ( auto i = 1; i <= n; ++ i ) {
         for ( auto j = 0; j < 2; ++ j ) {
-          Int& cur = cnt[i][j];
-          if ( cur == INF )
-            continue;
+          cnt[i][j] = INF;
           for ( auto d = in.X; d <= in.Y; ++ d ) {
-            Int& next = cnt[i + d][j ^ 1];
-            next = std::min(next, cur + get_sum(j ^ 1, i, std::min(n, i + d - 1)));
-            std::cout << "@get_min: (" << i << ", " << j << " = " << cur << ") -> (" << i + d << ", " << ( j ^ 1 ) << " = " << next << ")" << std::endl;
+            if ( i - d < 0 )
+              continue;
+            Int& cur = cnt[i - d][j ^ 1];
+            if ( cur == INF )
+              continue;
+            Int& next = cnt[i][j];
+            next = std::min(next, cur + get_sum(j ^ 1, i - d + 1, i));
           }
         }
       }
-      return std::min(cnt[n + 1][0], cnt[n + 1][1]);
+      return std::min(cnt[n][0], cnt[n][1]);
     }
 
     Int get_sum( const Int& t, const Int& id ) {
