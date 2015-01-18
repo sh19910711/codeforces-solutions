@@ -88,6 +88,7 @@ class Disj
     end
     last_name[find(old_name)] = new_name
     parent[new_name] = find(old_name)
+    self
   end
 
   def each
@@ -100,17 +101,11 @@ end
 
 input_format = "%d" # scanf(input_format)
 Solution::Runner.run(input_format) do |q|
-  disj = Disj.new
-
-  list = (1..q).to_a.map do
+  (1..q).to_a.map do
     old, new = gets.split
     {:new => new, :old => old, }
-  end
-
-  list.inject(Set.new) do |set, info|
+  end.inject(Disj.new) do |disj, info|
     disj.update info[:old], info[:new]
   end
-
-  disj
 end
 
