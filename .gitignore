@@ -1,5 +1,6 @@
 a.out
 main
+output.txt
 *.o
 *.omc
 .*.swp
