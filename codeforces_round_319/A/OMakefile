@@ -1,0 +1,10 @@
+CC = gcc
+CFLAGS += -g -O2 -Wall
+
+CProgram(main, main)
+
+output.txt: input.txt expected.txt main$(EXE)
+  sh run.sh input.txt ./main$(EXE) > output.txt
+  diff -u expected.txt output.txt && echo OK
+
+.DEFAULT: output.txt
