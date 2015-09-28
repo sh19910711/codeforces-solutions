@@ -1,0 +1,22 @@
+open configure/Configure
+CheckProg(g++)
+
+CXX=g++
+CXXFLAGS=-std=c++11 -Wall -O2
+TIMEOUT=5
+
+define_rules() =
+  main: main.cpp
+    $(CXX) $(CXXFLAGS) -o $@ $+
+
+  output.txt: input.txt expected.txt main main.cpp
+    timeout $(TIMEOUT) bash -c "./main < input.txt > output.txt" || echo ">>> ERROR: TIMEOUT"
+    diff expected.txt output.txt && echo ">>> Passed Tests"
+
+  .PHONY: clean
+  clean:
+    rm -r *.omc $(filter-proper-targets $(ls R, .))
+
+  .DEFAULT: output.txt
+
+.SUBDIRS: . $(dirname $(ls ./*/OMakefile))
